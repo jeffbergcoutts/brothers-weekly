@@ -1,5 +1,4 @@
-const token = 'BQCwnk5Zg0kHiWR10qS8RCwwtzrton1VEQ3I0GFQry2RTLl41axW_3IHBtCFoO_NL4AmaHiqkLlb1NyM0Ewmm5XFYB_BRP4Hc5WhBPbrkaGZDvMUfifGFkDvKwKetoNZMDePm50XpBKPuLDHNjEbghPgNjlm2gx09JsWCusX97Hldq9YFehPCwdL2LGC_WD_fGjTXqsQYpogbzGJOELZSanobDnYOLUoHg8Ml6cvgUw-Y9M'
-
+const token = ''
 async function getTopTenUniqueTracksForUser(token) {
   let limit = 10
   let offset = 0
