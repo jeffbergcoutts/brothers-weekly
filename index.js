@@ -2,9 +2,9 @@ var webapi = require('./webapi.js');
 var oauth = require('./oauth.js');
 
 // Real Playlist
-const playlistId = '0NADibKvY5ApsQVxIGuWKr'
+const playlistId = process.env.PLAYLISTID
 // Test Playlist
-const testPlaylistId = '6wJtRbnoQzo7sUc3S8NTdT'
+const testPlaylistId = process.env.TESTPLAYLISTID
 
 const refreshTokens = [
   process.env.REFRESHTOKENJEFF,
