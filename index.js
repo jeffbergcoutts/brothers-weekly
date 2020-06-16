@@ -2,7 +2,7 @@ var webapi = require('./webapi.js');
 var oauth = require('./oauth.js');
 
 // Real Playlist
-const playlistId = process.env.PLAYLISTID
+const realPlaylistId = process.env.PLAYLISTID
 // Test Playlist
 const testPlaylistId = process.env.TESTPLAYLISTID
 
@@ -13,6 +13,22 @@ const refreshTokens = [
 ]
 
 const createPlaylistRefreshToken = process.env.REFRESHTOKENPLAYLIST
+
+let mode = ""
+switch(process.argv[2]) {
+  case "publish":
+    mode = "publish"
+    break;
+  case "test":
+    mode = "test"
+    break;
+  default:
+    mode = "dryRun"
+    break;
+}
+console.log(mode)
+
+getAllTracksAndCreatePlaylist()
 
 function trackListFromLastWeeksTracks(tracks) {
   let lastWeeksTracks = []
@@ -60,7 +76,7 @@ function filterTracksForUser(userTopTracks, lastWeeksTracks, allTracks) {
     //}
 
     if (uniqueTracks.length === 15) {
-      console.log(reportTracks)
+      (mode === "dryRun") && console.log(reportTracks)
       return uniqueTracks
     }
   }
@@ -76,7 +92,7 @@ function makeTracksForData(tracks) {
 async function getAllTracksAndCreatePlaylist() {
   // get tracks from last weeks playlist
   const playlistAuth = await oauth.getTokenFromRefreshToken(createPlaylistRefreshToken)
-  const lastWeeksPlaylist = await webapi.getLastWeeksTracks(playlistAuth.access_token, playlistId)
+  const lastWeeksPlaylist = await webapi.getLastWeeksTracks(playlistAuth.access_token, realPlaylistId)
   const lastWeeksTracks = trackListFromLastWeeksTracks(lastWeeksPlaylist)
 
   // determine user order to generate tracks
@@ -109,12 +125,8 @@ async function getAllTracksAndCreatePlaylist() {
   
   // create new playlist with new tracks
   const tracksForData = makeTracksForData(currentWeekTracks)
-
-  if (process.argv[2] === "publish") {
+  if (mode != "dryRun") {
+    const playlistId = (mode === "publish") ? realPlaylistId : testPlaylistId
     webapi.createPlaylist(playlistAuth.access_token, tracksForData, playlistId)
-  } else if (process.argv[2] === "test") {
-    webapi.createPlaylist(playlistAuth.access_token, tracksForData, testPlaylistId)
   }
 }
-
-getAllTracksAndCreatePlaylist()
