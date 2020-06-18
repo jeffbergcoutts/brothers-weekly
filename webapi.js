@@ -37,16 +37,16 @@ module.exports = {
     )
   },
   createPlaylist:
-  function (token, tracks, playlistId) {
+  function (token, tracks, playlistId, replace) {
     return new Promise(
       function (resolve, reject) {
-        const postData = JSON.stringify(tracks)
-        console.log(postData)
+        const method = (replace === true) ? "PUT" : "POST"
+        const postData = `{"uris": ${JSON.stringify(tracks)}}`
         const options = {
           hostname: 'api.spotify.com',
           port: 443,
           path: `/v1/playlists/${playlistId}/tracks`,
-          method: 'POST',
+          method: method,
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
