@@ -133,27 +133,29 @@ async function getAllTracksAndCreatePlaylist() {
 
   // determine user order to generate tracks
   let offset
+  const noOfUsers = refreshTokens.length
   if (process.argv[3]) {
-      offset = parseInt(process.argv[3]);
-      console.log(`you've entered a starting number of ${offset}`)
+    var testMonth = parseInt(process.argv[3]);
+    offset = ((testMonth < 3) ? testMonth : testMonth % noOfUsers)
+    console.log(`you've entered ${testMonth}, so the starting number is ${offset}`)
   } else {
-      var date = new Date();
-      var month = date.getMonth();
-      offset = Math.floor(month/4)
-      console.log(`no starting number entered, program will use ${offset} determined from the current month ${month}`)
+    var date = new Date();
+    var month = date.getMonth();
+    offset = ((month < 3) ? month : month % noOfUsers)
+    console.log(`the current month is ${month}, so the starting number is ${offset}`)
   }
 
   // get oAuth tokens for each user
   let userTokens = []
-  for (i = 0; i < refreshTokens.length; i++) {
+  for (i = 0; i < noOfUsers; i++) {
     var userAuth = await oauth.getTokenFromRefreshToken(refreshTokens[i])
     userTokens.push(userAuth.access_token)
   }
 
   // get top tracks from each user, filter based on rules, and add to new tracks list
   var currentWeekTracks = []
-  for (i = 0; i < userTokens.length; i++) {
-    var pointer = (i + offset) % userTokens.length;
+  for (i = 0; i < noOfUsers; i++) {
+    var pointer = (i + offset) % noOfUsers;
     var userTopTracks = await webapi.getTopTracksforUser(userTokens[pointer])
     var eligibleTracks = filterTracksForUser(userTopTracks, lastWeeksTracks, currentWeekTracks)
     currentWeekTracks = currentWeekTracks.concat(eligibleTracks)

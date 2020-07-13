@@ -6,7 +6,8 @@ const overrides = {
             "1V95p8oWGxXlpcFRYqXV3w",
             "1XzY7sGHYarxdc9u2Ks1oU",
             "6YYk2yfx7jUHLfI5W1sgNi",
-            "7oWSqrgMuIEyH9qp5nu2e5"
+            "7oWSqrgMuIEyH9qp5nu2e5",
+            "0w5SU4gzff0dsC2aohgIzU"
         ]
     }
 }
