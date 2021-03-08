@@ -1,0 +1,27 @@
+{
+  "name": "brothers-weekly",
+  "version": "1.0.0",
+  "description": "Generates a playlist of top tracks from the past 4 months for a set of users, updated weekly",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeffbergcoutts/brothers-weekly.git"
+  },
+  "author": "Jeff Bergcoutts",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jeffbergcoutts/brothers-weekly/issues"
+  },
+  "homepage": "https://github.com/jeffbergcoutts/brothers-weekly#readme",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "https": "^1.0.0",
+    "querystring": "^0.2.1"
+  },
+  "engines": {
+    "node": "10.16.2"
+  }
+}

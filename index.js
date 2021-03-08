@@ -1,3 +1,4 @@
+require('dotenv').config()
 var webapi = require('./webapi.js');
 var oauth = require('./oauth.js');
 const {overrides} = require('./overrides.js')

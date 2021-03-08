@@ -1,9 +1,9 @@
 require('dotenv').config()
-var querystring = require('querystring')
-var https = require('https')
+const querystring = require('querystring')
+const https = require('https')
 
-var clientID = process.env.CLIENTID
-var clientSecret = process.env.CLIENTSECRET
+const clientID = process.env.CLIENTID
+const clientSecret = process.env.CLIENTSECRET
 
 module.exports = {
   getTokenFromRefreshToken:
