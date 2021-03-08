@@ -4,7 +4,7 @@
 Generates a playlist of top tracks from a set of users from the past 4 months, updated weekly.
 
 ## Rules
-* 15 songs each
+* 10 songs each
 * Max 5 repeats from last weeks playlist
 * No repeats on current playlist, so if one of your tops tracks is already on the playlist, the next eligible one will be taken
 * Because of the above ^ the order of who's tracks are considered changes every month

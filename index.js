@@ -4,7 +4,8 @@ const {overrides} = require('./overrides.js')
 
 const realPlaylistId = process.env.PLAYLISTID
 const testPlaylistId = process.env.TESTPLAYLISTID
-const archivePlaylistId = process.env.ARCHIVEPLAYLISTID
+const realArchivePlaylistId = process.env.ARCHIVEPLAYLISTID
+const testArchivePlaylistId = process.env.TESTARCHIVEPLAYLISTID
 
 const refreshTokens = [
   process.env.REFRESHTOKENJEFF,
@@ -16,17 +17,24 @@ const createPlaylistRefreshToken = process.env.REFRESHTOKENPLAYLIST
 
 let mode = ""
 switch(process.argv[2]) {
-  case "publish":
+  case "publish": // will modify archive & real playlist
     mode = "publish"
     break;
-  case "test":
+  case "test": // will modify test archive and test playlist
     mode = "test"
     break;
+  case "report": // will not modify playlists
+    mode = "report"
+    break;
   default:
-    mode = "dryRun"
+    mode = ""
     break;
 }
 console.log(mode)
+if (mode === "") {
+  console.log("You must select a mode. 'publish' will update real playlists, 'test' will update test playlists, 'report' will only print results")
+  return
+}
 
 getAllTracksAndCreatePlaylist()
 
@@ -40,7 +48,7 @@ function trackListFromLastWeeksTracks(tracks) {
 }
 
 function filterTracksForUser(userTopTracks, lastWeeksTracks, allTracks) {
-  // will return a maximum of 15 tracks, max 5 repeats from last week, max 3 from one album
+  // will return a maximum of 10 tracks, max 5 repeats from last week, max 3 from one album
   let uniqueTracks = []
   let repeatTracks = 0
   let previousAlbums = []
@@ -48,6 +56,7 @@ function filterTracksForUser(userTopTracks, lastWeeksTracks, allTracks) {
   let reportTracks = []
 
   const artistDenylist = overrides.denylist.artists
+  const albumDenylist = overrides.denylist.albums
 
   for (x = 0; x < userTopTracks.length; x++) {
     let albumName = userTopTracks[x].album.name
@@ -74,6 +83,11 @@ function filterTracksForUser(userTopTracks, lastWeeksTracks, allTracks) {
       reportTag = "artist on denylist"
     }
 
+    if (albumDenylist.includes(album)) {
+      addTrack = false
+      reportTag = "album on denylist"
+    }
+
     // check if track was on last weeks playlist
     if (lastWeeksTracks.includes(track)) {
       repeatTrack = true
@@ -85,7 +99,7 @@ function filterTracksForUser(userTopTracks, lastWeeksTracks, allTracks) {
       }
     }
 
-    //TODO need to skip if it's repeats of the same album - not any repeast
+    //TODO need to skip if it's repeats of the same album - not any repeat
     if (previousAlbums.includes(album)) {
       repeatAlbumCount = previousAlbums.filter((v) => (v === album)).length;
       if (repeatAlbumCount > 2) { // don't add if already 2 album repeats (making 3 tracks from the same album)
@@ -110,9 +124,9 @@ function filterTracksForUser(userTopTracks, lastWeeksTracks, allTracks) {
     }
     reportTracks.push(`${reportTag} - ${artistName} - ${albumName} - ${trackName} (${repeatTracks},${repeatAlbumCount})`)
 
-    // stop when 15 tracks are added
-    if (uniqueTracks.length === 15) {
-      (mode === "dryRun") && console.log(reportTracks)
+    // stop when 10 tracks are added
+    if (uniqueTracks.length === 10) {
+      (mode === "report") && console.log(reportTracks)
       return uniqueTracks
     }
   }
@@ -162,13 +176,16 @@ async function getAllTracksAndCreatePlaylist() {
   }
   
   let tracksForData = ""
-  if (mode != "dryRun") {
+  if (mode != "report") {
     // add tracks to archive
     tracksForData = makeTracksForData(lastWeeksTracks)
+    const archivePlaylistId = (mode === "publish") ? realArchivePlaylistId : testArchivePlaylistId
     webapi.createPlaylist(playlistAuth.access_token, tracksForData, archivePlaylistId, false)
 
     // replace playlist with new tracks
     tracksForData = makeTracksForData(currentWeekTracks)
+    console.log(currentWeekTracks)
+    console.log(tracksForData)
     const playlistId = (mode === "publish") ? realPlaylistId : testPlaylistId
     webapi.createPlaylist(playlistAuth.access_token, tracksForData, playlistId, true)
   }
