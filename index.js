@@ -39,7 +39,7 @@ if (mode === "") {
 
 getAllTracksAndCreatePlaylist()
 
-function trackListFromLastWeeksTracks(tracks) {
+function createTrackListFromLastWeeksTracks(tracks) {
   let lastWeeksTracks = []
   for (i = 0; i < tracks.length; i++) {
     let track = tracks[i].track.id
@@ -48,7 +48,7 @@ function trackListFromLastWeeksTracks(tracks) {
   return lastWeeksTracks
 }
 
-function filterTracksForUser(userTopTracks, lastWeeksTracks, allTracks) {
+function filterTopTracksForUser(userTopTracks, lastWeeksTracks, allTracks) {
   // will return a maximum of 10 tracks, max 5 repeats from last week, max 3 from one album
   let uniqueTracks = []
   let repeatTracks = 0
@@ -133,7 +133,7 @@ function filterTracksForUser(userTopTracks, lastWeeksTracks, allTracks) {
   }
 }
 
-function makeTracksForData(tracks) {
+function prepareTracksForData(tracks) {
   const modifiedTracks = tracks.map(track => {
     return 'spotify:track:' + track;
     })
@@ -144,7 +144,7 @@ async function getAllTracksAndCreatePlaylist() {
   // get tracks from last weeks playlist
   const playlistAuth = await oauth.getTokenFromRefreshToken(createPlaylistRefreshToken)
   const lastWeeksPlaylist = await webapi.getLastWeeksTracks(playlistAuth.access_token, realPlaylistId)
-  const lastWeeksTracks = trackListFromLastWeeksTracks(lastWeeksPlaylist)
+  const lastWeeksTracks = createTrackListFromLastWeeksTracks(lastWeeksPlaylist)
 
   // determine user order to generate tracks
   let offset
@@ -172,19 +172,19 @@ async function getAllTracksAndCreatePlaylist() {
   for (i = 0; i < noOfUsers; i++) {
     var pointer = (i + offset) % noOfUsers;
     var userTopTracks = await webapi.getTopTracksforUser(userTokens[pointer])
-    var eligibleTracks = filterTracksForUser(userTopTracks, lastWeeksTracks, currentWeekTracks)
+    var eligibleTracks = filterTopTracksForUser(userTopTracks, lastWeeksTracks, currentWeekTracks)
     currentWeekTracks = currentWeekTracks.concat(eligibleTracks)
   }
   
   let tracksForData = ""
   if (mode != "report") {
     // add tracks to archive
-    tracksForData = makeTracksForData(lastWeeksTracks)
+    tracksForData = prepareTracksForData(lastWeeksTracks)
     const archivePlaylistId = (mode === "publish") ? realArchivePlaylistId : testArchivePlaylistId
     webapi.createPlaylist(playlistAuth.access_token, tracksForData, archivePlaylistId, false)
 
     // replace playlist with new tracks
-    tracksForData = makeTracksForData(currentWeekTracks)
+    tracksForData = prepareTracksForData(currentWeekTracks)
     console.log(currentWeekTracks)
     console.log(tracksForData)
     const playlistId = (mode === "publish") ? realPlaylistId : testPlaylistId
