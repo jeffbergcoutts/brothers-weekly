@@ -1,7 +1,7 @@
 require('dotenv').config()
-var webapi = require('./webapi.js');
-var oauth = require('./oauth.js');
-const {overrides} = require('./overrides.js')
+var webapi = require('../clients/webapi.js');
+var oauth = require('../clients/accounts.js');
+const {overrides} = require('../overrides.js')
 
 const realPlaylistId = process.env.PLAYLISTID
 const testPlaylistId = process.env.TESTPLAYLISTID

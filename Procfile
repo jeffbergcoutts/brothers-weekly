@@ -1,1 +1,1 @@
-web: node index.js report
+web: node src/shared-weekly.js
