@@ -9,9 +9,9 @@ const realArchivePlaylistId = process.env.ARCHIVEPLAYLISTID
 const testArchivePlaylistId = process.env.TESTARCHIVEPLAYLISTID
 
 const refreshTokens = [
-  process.env.REFRESHTOKENJEFF,
-  process.env.REFRESHTOKENDAVE,
-  process.env.REFRESHTOKENJON
+  process.env.REFRESHTOKEN1,
+  process.env.REFRESHTOKEN2,
+  process.env.REFRESHTOKEN3
 ]
 
 const createPlaylistRefreshToken = process.env.REFRESHTOKENPLAYLIST
