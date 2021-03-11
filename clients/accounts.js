@@ -4,7 +4,7 @@ const https = require('https')
 
 const clientID = process.env.CLIENTID
 const clientSecret = process.env.CLIENTSECRET
-
+const baseURL = process.env.BASEURL
 const HOSTNAME = 'accounts.spotify.com'
 const PORT = 443
 
@@ -59,7 +59,7 @@ module.exports = {
         var postData = querystring.stringify({
           'grant_type': 'authorization_code',
           'code': code,
-          'redirect_uri': 'http://localhost:8080/callback',
+          'redirect_uri': `${baseURL}callback`,
           'client_id': clientID,
           'client_secret': clientSecret
         })
