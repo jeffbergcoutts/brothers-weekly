@@ -11,6 +11,7 @@ const cookieSecret = process.env.COOKIESECRET
 const createPlaylistRefreshToken = process.env.REFRESHTOKENPLAYLIST
 const realPlaylistId = process.env.PLAYLISTID
 const baseURL = process.env.BASEURL
+const PORT = process.env.PORT || 8080
 
 var requestSessionHandler = sessions({
   cookieName: 'authTokens', // cookie name dictates the key name added to the request object
@@ -188,4 +189,4 @@ var server = http.createServer(function (req, res) {
   }
 })
 
-server.listen(8080)
+server.listen(PORT)
