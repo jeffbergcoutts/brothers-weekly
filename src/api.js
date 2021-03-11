@@ -122,7 +122,7 @@ var server = http.createServer(function (req, res) {
     // CALLBACK (Endpoint for callback from Spotify login)
 
     // Get code from response from Spotify and use to request Tokens
-    var requestURL = new URL(req.headers.host + req.url)
+    var requestURL = new URL(req.url, 'https://shared-weekly.herokuapp.com/')
     var code = requestURL.searchParams.get('code')
     accounts.requestToken(code).then( response => {
       return storeToken(response)
