@@ -1,1 +1,1 @@
-web: node index.js test
+web: node src/api.js

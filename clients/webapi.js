@@ -1,4 +1,6 @@
 const https = require('https')
+const HOSTNAME = 'api.spotify.com'
+const PORT = 443
 
 module.exports = {
   getTopTracksforUser:
@@ -7,8 +9,8 @@ module.exports = {
       function (resolve, reject) {
 
         const options = {
-          hostname: 'api.spotify.com',
-          port: 443,
+          hostname: HOSTNAME,
+          port: PORT,
           path: `/v1/me/top/tracks?time_range=short_term&limit=50&offset=0`,
           method: 'GET',
           headers: {
@@ -43,8 +45,8 @@ module.exports = {
         const method = (replace === true) ? "PUT" : "POST"
         const postData = `{"uris": ${JSON.stringify(tracks)}}`
         const options = {
-          hostname: 'api.spotify.com',
-          port: 443,
+          hostname: HOSTNAME,
+          port: PORT,
           path: `/v1/playlists/${playlistId}/tracks`,
           method: method,
           headers: {
@@ -83,8 +85,8 @@ module.exports = {
       function (resolve, reject) {
 
         const options = {
-          hostname: 'api.spotify.com',
-          port: 443,
+          hostname: HOSTNAME,
+          port: PORT,
           path: `/v1/playlists/${playlistId}/tracks`,
           method: 'GET',
           headers: {
@@ -109,6 +111,77 @@ module.exports = {
         })
       
         req.end()
-      }    )
+      }
+    )
+  },
+  getSavedAlbums:
+  function (token) {
+    return new Promise(
+      function (resolve, reject) {
+        const options = {
+          hostname: HOSTNAME,
+          port: PORT,
+          path: '/v1/me/albums',
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+
+        const req = https.request(options, res => {
+          console.log(`getSavedAlbums: statusCode: ${res.statusCode}`)
+          let data = ''
+          res.on('data', (chunk) => {
+            data += chunk.toString()
+          })
+          res.on('end', () => {
+            resolve(data)
+          })
+        })
+
+        req.on('error', error => {
+          console.log(error)
+          reject(error)
+        })
+
+        req.end()
+      }
+    )
+  },
+  getRecentlyPlayed:
+  function (token) {
+    return new Promise(
+      function (resolve, reject) {
+        const options = {
+          hostname: HOSTNAME,
+          port: PORT,
+          path: '/v1/me/player/recently-played?type=track',
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+
+        const req = https.request(options, res => {
+          console.log(`getRecentlyPlayed: statusCode: ${res.statusCode}`)
+          let data = ''
+          res.on('data', (chunk) => {
+            data += chunk.toString()
+          })
+          res.on('end', () => {
+            resolve(data)
+          })
+        })
+
+        req.on('error', error => {
+          console.log(error)
+          reject(error)
+        })
+
+        req.end()
+      }
+    )
   }
 }
