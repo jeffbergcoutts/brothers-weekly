@@ -1,6 +1,6 @@
 require('dotenv').config()
 var webapi = require('../clients/webapi.js');
-var oauth = require('../clients/accounts.js');
+var accounts = require('../clients/accounts.js');
 const {overrides} = require('../overrides.js')
 
 const realPlaylistId = process.env.PLAYLISTID
@@ -142,7 +142,7 @@ function prepareTracksForData(tracks) {
 
 async function getAllTracksAndCreatePlaylist() {
   // get tracks from last weeks playlist
-  const playlistAuth = await oauth.getTokenFromRefreshToken(createPlaylistRefreshToken)
+  const playlistAuth = await accounts.getTokenFromRefreshToken(createPlaylistRefreshToken)
   const lastWeeksPlaylist = await webapi.getLastWeeksTracks(playlistAuth.access_token, realPlaylistId)
   const lastWeeksTracks = createTrackListFromLastWeeksTracks(lastWeeksPlaylist)
 
@@ -163,7 +163,7 @@ async function getAllTracksAndCreatePlaylist() {
   // get oAuth tokens for each user
   let userTokens = []
   for (i = 0; i < noOfUsers; i++) {
-    var userAuth = await oauth.getTokenFromRefreshToken(refreshTokens[i])
+    var userAuth = await accounts.getTokenFromRefreshToken(refreshTokens[i])
     userTokens.push(userAuth.access_token)
   }
 

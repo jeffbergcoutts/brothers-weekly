@@ -1,1 +1,1 @@
-web: node src/shared-weekly.js
+web: node src/api.js
