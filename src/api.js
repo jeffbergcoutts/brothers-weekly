@@ -17,7 +17,8 @@ var requestSessionHandler = sessions({
   cookieName: 'authTokens', // cookie name dictates the key name added to the request object
   secret: cookieSecret, // should be a large unguessable string
   duration: 24 * 60 * 60 * 1000, // how long the session will stay valid in ms
-  activeDuration: 1000 * 60 * 5 // if expiresIn < activeDuration, the session will be extended by activeDuration milliseconds
+  activeDuration: 1000 * 60 * 5, // if expiresIn < activeDuration, the session will be extended by activeDuration milliseconds
+  domain: localhost
 })
 
 function filterResults(results, filter) { //RE-WRITE & move?
@@ -122,7 +123,7 @@ var server = http.createServer(function (req, res) {
     // CALLBACK (Endpoint for callback from Spotify login)
 
     // Get code from response from Spotify and use to request Tokens
-    var requestURL = new URL(req.url, 'https://shared-weekly.herokuapp.com/')
+    var requestURL = new URL(req.url, 'http://api.sharedweekly.com/')
     var code = requestURL.searchParams.get('code')
     accounts.requestToken(code).then( response => {
       return storeToken(response)
@@ -130,6 +131,7 @@ var server = http.createServer(function (req, res) {
 
     // Store tokens and expiry date in cookie
     function storeToken(response) {
+      console.log("login")
       console.log(response)
       requestSessionHandler(req, res, function () {
           req.authTokens.accessToken = response.access_token
@@ -171,11 +173,11 @@ var server = http.createServer(function (req, res) {
 
         function storeToken(response) {
           requestSessionHandler(req, res, function () {
-              req.authTokens.accessToken = response.access_token
-              req.authTokens.refreshToken = response.refresh_token
-              var expiresIn = response.expires_in * 1000
-              var date = new Date()
-              req.authTokens.expiryDate = expiresIn + date.getTime()
+            req.authTokens.accessToken = response.access_token
+            req.authTokens.refreshToken = response.refresh_token
+            var expiresIn = response.expires_in * 1000
+            var date = new Date()
+            req.authTokens.expiryDate = expiresIn + date.getTime()
           })
           res.end('logged in')
         }
