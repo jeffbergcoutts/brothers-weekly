@@ -59,6 +59,7 @@ var server = http.createServer(function (req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE')
   res.setHeader('Access-Control-Allow-Credentials', 'true')
   res.setHeader('Access-Control-Expose-Headers', 'Set-Cookie')
+  res.setHeader('Access-Control-Allow-Headers', 'Cookie')
 
   if (/^\/api\/spotifyhome/.test(req.url)) {
     // SPOTIFY HOME (Album view)
