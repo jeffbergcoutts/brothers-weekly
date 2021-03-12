@@ -18,7 +18,7 @@ var requestSessionHandler = sessions({
   secret: cookieSecret, // should be a large unguessable string
   duration: 24 * 60 * 60 * 1000, // how long the session will stay valid in ms
   activeDuration: 1000 * 60 * 5, // if expiresIn < activeDuration, the session will be extended by activeDuration milliseconds
-  domain: localhost
+  domain: 'localhost'
 })
 
 function filterResults(results, filter) { //RE-WRITE & move?
