@@ -17,10 +17,7 @@ var requestSessionHandler = sessions({
   cookieName: 'authTokens', // cookie name dictates the key name added to the request object
   secret: cookieSecret, // should be a large unguessable string
   duration: 24 * 60 * 60 * 1000, // how long the session will stay valid in ms
-  activeDuration: 1000 * 60 * 5, // if expiresIn < activeDuration, the session will be extended by activeDuration milliseconds
-  cookie: {
-    httpOnly: false
-  }
+  activeDuration: 1000 * 60 * 5 // if expiresIn < activeDuration, the session will be extended by activeDuration milliseconds
 })
 
 function filterResults(results, filter) { //RE-WRITE & move?
@@ -61,6 +58,7 @@ var server = http.createServer(function (req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8000')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE')
   res.setHeader('Access-Control-Allow-Credentials', 'true')
+  res.setHeader('Access-Control-Expose-Headers', 'Set-Cookie')
 
   if (/^\/api\/spotifyhome/.test(req.url)) {
     // SPOTIFY HOME (Album view)
