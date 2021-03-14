@@ -11,7 +11,7 @@ const cookieSecret = process.env.COOKIESECRET
 const createPlaylistRefreshToken = process.env.REFRESHTOKENPLAYLIST
 const realPlaylistId = process.env.PLAYLISTID
 const baseURL = process.env.BASEURL
-const PORT = process.env.PORT || 8080
+const PORT = process.env.PORT || 5000
 
 //const cookiesFlags = (baseURL === "http://localhost:8080/") ? {} : {sameSite: 'none', secure: true}
 
@@ -20,7 +20,10 @@ var requestSessionHandler = sessions({
   secret: cookieSecret, // should be a large unguessable string
   duration: 24 * 60 * 60 * 1000, // how long the session will stay valid in ms
   activeDuration: 1000 * 60 * 5, // if expiresIn < activeDuration, the session will be extended by activeDuration milliseconds
-  cookie: {sameSite: 'lax'}
+  cookie: {
+    sameSite: 'none',
+    secure: true
+  }
 })
 
 function filterResults(results, filter) { //RE-WRITE & move?
@@ -58,7 +61,7 @@ function filterResults(results, filter) { //RE-WRITE & move?
 }
 
 var server = http.createServer(function (req, res) {
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8000')
+  res.setHeader('Access-Control-Allow-Origin', 'https://localhost:8080')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE')
   res.setHeader('Access-Control-Allow-Credentials', 'true')
   res.setHeader('Access-Control-Expose-Headers', 'Set-Cookie')
@@ -135,17 +138,19 @@ var server = http.createServer(function (req, res) {
 
     // Store tokens and expiry date in cookie
     function storeToken(response) {
-      console.log("login")
-      console.log(response)
       requestSessionHandler(req, res, function () {
+        try {
           req.authTokens.accessToken = response.access_token
           req.authTokens.refreshToken = response.refresh_token
           var expiresIn = response.expires_in * 1000
           var date = new Date()
           req.authTokens.expiryDate = expiresIn + date.getTime()
+        } catch {
+          console.log("callback: cookie not stored")
+        }
       })
       // Redirect back to home page
-      res.writeHead(302, {'Location': 'http://localhost:8000'})
+      res.writeHead(302, {'Location': 'https://localhost:8080'})
       res.end()
     }
   } else if (/^\/api\/getloggedin/.test(req.url)) {
@@ -159,13 +164,17 @@ var server = http.createServer(function (req, res) {
 
     // get tokens and expiry date from cookie
     requestSessionHandler(req, res, function () {
+      try {
         accessToken = req.authTokens.accessToken
         refreshToken = req.authTokens.refreshToken
         expiryDate = req.authTokens.expiryDate
+      } catch{
+        console.log("getloggedin: cookie not stored")
+      }
     })
 
     if (accessToken == null) {
-      console.log("no token found in cookies")
+      console.log("getloggedin: no token found in cookies")
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end('no token')
     } else {
