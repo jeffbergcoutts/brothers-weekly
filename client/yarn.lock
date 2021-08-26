@@ -6622,6 +6622,7 @@
     "jest-snapshot" "^26.6.2"
 
 "jest-resolve@*":
+  "integrity" "sha1-Bw/nFZr4ewPlD1LqXhfulbvuQOE="
   "version" "26.6.0"
   dependencies:
     "@jest/types" "^26.6.0"
