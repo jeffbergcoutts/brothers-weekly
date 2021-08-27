@@ -13,12 +13,12 @@ function App() {
       })
   }, []);
 
-  const loginLink = `<a href="${(env === 'dev') ? 'http://localhost:3001/login/' : 'https://test-bros-weekly.herokuapp.com/login/'}">Login</a>`;
+  const loginLink = (env === 'dev') ? 'http://localhost:3001/login/' : 'https://test-bros-weekly.herokuapp.com/login/';
 
   return (
     <div>
       <header>
-        <p>{loggedIn ? "Welcome!" : loginLink}</p>
+        <p>{loggedIn ? "Welcome!" : <a href={loginLink}>Login</a>}</p>
       </header>
     </div>
   );
