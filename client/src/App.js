@@ -13,9 +13,7 @@ function App() {
       })
   }, []);
 
-  const loginLink = (env === 'dev')
-    ? <a href="http://localhost:3001/login/">Login</a>
-    : <a href="https://test-bros-weekly.herokuapp.com/login/">Log in with Spotify (server)</a>;
+  const loginLink = `<a href="${(env === 'dev') ? 'http://localhost:3001/login/' : 'https://test-bros-weekly.herokuapp.com/login/'}">Login</a>`;
 
   return (
     <div>
