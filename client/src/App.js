@@ -14,7 +14,7 @@ function App() {
       <header>
         <p>{!data ? "Loading..." : data}</p>
         <a href="http://localhost:3001/login/">Log in with Spotify (local)</a>
-        <a href="https://localhost:3001/login/">Log in with Spotify (local ssl)</a>
+        <a href="https://test-bros-weekly.herokuapp.com/login/">Log in with Spotify (server)</a>
       </header>
     </div>
   );
