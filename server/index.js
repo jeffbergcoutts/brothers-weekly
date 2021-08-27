@@ -13,6 +13,7 @@ const realPlaylistId = process.env.PLAYLISTID
 const baseURL = process.env.BASEURL;
 const PORT = process.env.PORT || 3001;
 const env = process.env.ENV;
+const localDev = process.env.LOCALDEV
 
 const app = express();
 
@@ -31,17 +32,17 @@ app.use(express.static(path.resolve(__dirname, '../client/build')));
 
 // Handle GET requests to /api route
 app.get("/api", (req, res) => {
-  var message = '';
+  var loggedIn
   if (req.session.accessToken) {
-    message = "Logged in";
-    console.log(req.session.accessToken);
-    console.log(req.session.refreshToken);
-    console.log(req.session.expiryDate);
+    loggedIn = true;
   } else {
-    message = "Hello from server!";
+    loggedIn = false
   };
 
-  res.json({ message: message });
+  res.json({
+    loggedIn: loggedIn,
+    env: env
+  });
 });
 
 app.get("/login", (req, res) => {
@@ -53,8 +54,9 @@ app.get("/callback", (req, res) => { //callback from oauth flow
   var query = parseurl(req).query;
   var queryValues = querystring.parse(query);
   var code = queryValues.code;
+  const redirectUrl = (localDev === 'true') ? 'http://localhost:3000/' : baseURL
 
-  // get new Token using code
+  // get Token using code
   accounts.requestToken(code)
     .then( res => {
       // store Token in cookie for later use
@@ -64,7 +66,9 @@ app.get("/callback", (req, res) => { //callback from oauth flow
       var date = new Date();
       var expiresIn = (res.expires_in * 1000) + date.getTime();
       req.session.expiryDate = expiresIn;
-  }).then(() => {res.redirect(302, baseURL)});
+  }).then(() => {
+    res.redirect(302, redirectUrl)
+  });
 });
 
 app.get("/brosweekly", (req, res) => {

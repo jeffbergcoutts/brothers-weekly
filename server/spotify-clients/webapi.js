@@ -63,7 +63,6 @@ module.exports = {
             data = data + chunk
           })
           res.on('end', function() {
-            console.log(data)
             resolve(JSON.parse(data))
           })
         })
