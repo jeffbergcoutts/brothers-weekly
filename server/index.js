@@ -1,35 +1,85 @@
 const path = require('path');
 const express = require('express');
 const session = require('express-session');
+const webapi = require('./spotify-clients/webapi.js');
+const accounts = require('./spotify-clients/accounts.js');
+const parseurl = require('parseurl');
+const querystring = require('querystring');
 
+const clientID = process.env.CLIENTID;
+const cookieSecret = process.env.COOKIESECRET;
+const createPlaylistRefreshToken = process.env.REFRESHTOKENPLAYLIST
+const realPlaylistId = process.env.PLAYLISTID
+const baseURL = process.env.BASEURL;
 const PORT = process.env.PORT || 3001;
+const env = process.env.ENV;
 
 const app = express();
 
 app.set('trust proxy', 1); // trust first proxy
+
+const cookieSetting = (env === 'dev') ? { secure: false } : { secure: true }
 app.use(session({
-  secret: 'keyboard cat',
+  secret: cookieSecret,
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: true }
+  cookie: cookieSetting
 }));
-
-app.use((req,res, next) => {
-  req.session.test = "cookie value";
-  next();
-});
 
 // Have Node serve the files for our built React app
 app.use(express.static(path.resolve(__dirname, '../client/build')));
 
 // Handle GET requests to /api route
 app.get("/api", (req, res) => {
-  res.json({ message: "Hello from server!" });
+  var message = '';
+  if (req.session.accessToken) {
+    message = "Logged in";
+    console.log(req.session.accessToken);
+    console.log(req.session.refreshToken);
+    console.log(req.session.expiryDate);
+  } else {
+    message = "Hello from server!";
+  };
+
+  res.json({ message: message });
 });
 
-app.get("/cookie", (req, res) => {
-  res.send(req.session.test);
+app.get("/login", (req, res) => {
+  res.redirect(302, `https://accounts.spotify.com/authorize?client_id=${clientID}&response_type=code&redirect_uri=${baseURL}callback&scope=user-read-recently-played user-library-read`);
 });
+
+app.get("/callback", (req, res) => { //callback from oauth flow
+  // get code from url
+  var query = parseurl(req).query;
+  var queryValues = querystring.parse(query);
+  var code = queryValues.code;
+
+  // get new Token using code
+  accounts.requestToken(code)
+    .then( res => {
+      // store Token in cookie for later use
+      req.session.accessToken = res.access_token;
+      req.session.refreshToken = res.refresh_token;
+
+      var date = new Date();
+      var expiresIn = (res.expires_in * 1000) + date.getTime();
+      req.session.expiryDate = expiresIn;
+  }).then(() => {res.redirect(302, baseURL)});
+});
+
+app.get("/brosweekly", (req, res) => {
+  accounts.getTokenFromRefreshToken(createPlaylistRefreshToken).then( response => {
+    webapi.getLastWeeksTracks(response.access_token, realPlaylistId)
+    .then( response => {
+      const albumCoverUrl = response[0].track.album.images[1].url
+      //const track = response[0].track.id
+      res.end(albumCoverUrl)
+    })
+    .catch( err => {
+      res.end(err)
+    })
+  })
+})
 
 // All other GET requests not handled before will return our React app
 app.get('*', (req, res) => {
