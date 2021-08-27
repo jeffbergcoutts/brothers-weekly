@@ -101,7 +101,8 @@ module.exports = {
           })
 
           res.on('end', () => {
-            resolve(JSON.parse(data).items)
+            //resolve(JSON.parse(data).items)
+            resolve(data)
           })
         })
         req.on('error', error => {
@@ -167,7 +168,7 @@ module.exports = {
           console.log(`getRecentlyPlayed: statusCode: ${res.statusCode}`)
           let data = ''
           res.on('data', (chunk) => {
-            data += chunk.toString()
+            data += chunk
           })
           res.on('end', () => {
             resolve(data)

@@ -13,7 +13,6 @@ const realPlaylistId = process.env.PLAYLISTID
 const baseURL = process.env.BASEURL;
 const PORT = process.env.PORT || 3001;
 const env = process.env.ENV;
-const localDev = process.env.LOCALDEV
 
 const app = express();
 
@@ -54,7 +53,6 @@ app.get("/callback", (req, res) => { //callback from oauth flow
   var query = parseurl(req).query;
   var queryValues = querystring.parse(query);
   var code = queryValues.code;
-  const redirectUrl = (localDev === 'true') ? 'http://localhost:3000/' : baseURL
 
   // get Token using code
   accounts.requestToken(code)
@@ -67,22 +65,40 @@ app.get("/callback", (req, res) => { //callback from oauth flow
       var expiresIn = (res.expires_in * 1000) + date.getTime();
       req.session.expiryDate = expiresIn;
   }).then(() => {
-    res.redirect(302, redirectUrl)
+    res.redirect(302, baseURL)
   });
 });
 
-app.get("/brosweekly", (req, res) => {
+app.get("/sharedweekly", (req, res) => {
+  console.log("called /sharedweekly!")
   accounts.getTokenFromRefreshToken(createPlaylistRefreshToken).then( response => {
     webapi.getLastWeeksTracks(response.access_token, realPlaylistId)
     .then( response => {
-      const albumCoverUrl = response[0].track.album.images[1].url
-      //const track = response[0].track.id
-      res.end(albumCoverUrl)
+      const data = JSON.parse(response).items
+      res.json({
+        data
+      });
     })
     .catch( err => {
       res.end(err)
     })
   })
+})
+
+app.get("/recentlyplayed", (req, res) => {
+  console.log("called /recentlyplayed!")
+  
+  // Get Recently Played from Spotify API
+  webapi.getRecentlyPlayed(req.session.accessToken)
+    .then( response => {
+      const data = JSON.parse(response).items
+      res.json({
+        data
+      });
+    })
+    .catch( err => {
+      res.end(err)
+    })
 })
 
 // All other GET requests not handled before will return our React app
