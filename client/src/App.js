@@ -1,6 +1,5 @@
 import React from "react";
-import SharedWeekly from "./SharedWeekly";
-import RecentlyPlayed from "./RecentlyPlayed";
+import DisplayTracks from "./DisplayTracks";
 
 function App() {
   const [isloggedIn, setisLoggedIn] = React.useState(null);
@@ -22,8 +21,8 @@ function App() {
     <div>
       {!isloggedIn ? <Link link={loginHref} /> :
         <div>
-          <SharedWeekly />
-          <RecentlyPlayed />
+          <DisplayTracks api= "/sharedweekly" playlistName="Brothers Weekly"/>
+          <DisplayTracks api= "/recentlyplayed" playlistName="Recently Played Albums"/>
         </div>
       }
     </div>
