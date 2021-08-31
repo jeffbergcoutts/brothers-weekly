@@ -21,6 +21,7 @@ function App() {
     <div>
       {!isloggedIn ? <Link link={loginHref} /> :
         <div>
+          <h1>Brothers Weekly</h1>
           <DisplayTracks api= "/sharedweekly" playlistName="Brothers Weekly"/>
           <DisplayTracks api= "/recentlyplayed" playlistName="Recently Played Albums"/>
         </div>
