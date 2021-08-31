@@ -3,23 +3,22 @@ import DisplayTracks from "./DisplayTracks";
 
 function App() {
   const [isloggedIn, setisLoggedIn] = React.useState(null);
-  const [env, setEnv] = React.useState(null);
+  const [baseURL, setBaseURL] = React.useState(null);
 
   React.useEffect(() => {
     fetch("/api")
       .then((res) => res.json())
       .then(function(data) {
         setisLoggedIn(data.loggedIn)
-        setEnv(data.env)
+        setBaseURL(data.baseURL)
       })
   }, []);
 
-  const Link = (props) => <a href={props.link}>Login</a>
-  const loginHref = (env === 'dev') ? 'http://localhost:3001/login/' : 'https://test-bros-weekly.herokuapp.com/login/';
+  const loginHref = `${baseURL}login`;
 
   return (
     <div>
-      {!isloggedIn ? <Link link={loginHref} /> :
+      {!isloggedIn ? <a href={loginHref}>Login</a> :
         <div>
           <h1>Brothers Weekly</h1>
           <DisplayTracks api= "/sharedweekly" playlistName="Brothers Weekly"/>

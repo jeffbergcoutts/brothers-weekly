@@ -12,18 +12,17 @@ const createPlaylistRefreshToken = process.env.REFRESHTOKENPLAYLIST
 const realPlaylistId = process.env.PLAYLISTID
 const baseURL = process.env.BASEURL;
 const PORT = process.env.PORT || 3001;
-const env = process.env.ENV;
+const secureCookies = process.env.SECURECOOKIES;
 
 const app = express();
 
 app.set('trust proxy', 1); // trust first proxy
 
-const cookieSetting = (env === 'dev') ? { secure: false } : { secure: true }
 app.use(session({
   secret: cookieSecret,
   resave: false,
   saveUninitialized: true,
-  cookie: cookieSetting
+  cookie: (secureCookies === 'false') ? { secure: false } : { secure: true }
 }));
 
 // Have Node serve the files for our built React app
@@ -40,7 +39,7 @@ app.get("/api", (req, res) => {
 
   res.json({
     loggedIn: loggedIn,
-    env: env
+    baseURL: baseURL
   });
 });
 
