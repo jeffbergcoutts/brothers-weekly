@@ -1,7 +1,7 @@
 require('dotenv').config()
-var webapi = require('../clients/webapi.js');
-var accounts = require('../clients/accounts.js');
-const {overrides} = require('../overrides.js')
+var webapi = require('./spotify-clients/webapi.js')
+var accounts = require('./spotify-clients/accounts.js');
+const {overrides} = require('./overrides.js')
 
 const realPlaylistId = process.env.PLAYLISTID
 const testPlaylistId = process.env.TESTPLAYLISTID
@@ -144,7 +144,7 @@ async function getAllTracksAndCreatePlaylist() {
   // get tracks from last weeks playlist
   const playlistAuth = await accounts.getTokenFromRefreshToken(createPlaylistRefreshToken)
   const lastWeeksPlaylist = await webapi.getLastWeeksTracks(playlistAuth.access_token, realPlaylistId)
-  const lastWeeksTracks = createTrackListFromLastWeeksTracks(lastWeeksPlaylist)
+  const lastWeeksTracks = createTrackListFromLastWeeksTracks(JSON.parse(lastWeeksPlaylist).items)
 
   // determine user order to generate tracks
   let offset
@@ -172,7 +172,7 @@ async function getAllTracksAndCreatePlaylist() {
   for (i = 0; i < noOfUsers; i++) {
     var pointer = (i + offset) % noOfUsers;
     var userTopTracks = await webapi.getTopTracksforUser(userTokens[pointer])
-    var eligibleTracks = filterTopTracksForUser(userTopTracks, lastWeeksTracks, currentWeekTracks)
+    var eligibleTracks = filterTopTracksForUser(JSON.parse(userTopTracks).items, lastWeeksTracks, currentWeekTracks)
     currentWeekTracks = currentWeekTracks.concat(eligibleTracks)
   }
   
