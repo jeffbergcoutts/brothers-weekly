@@ -1,8 +1,8 @@
 const path = require('path');
 const express = require('express');
 const session = require('express-session');
-const webapi = require('./spotify-clients/webapi.js');
-const accounts = require('./spotify-clients/accounts.js');
+const webapi = require('../spotify-clients/webapi.js');
+const accounts = require('../spotify-clients/accounts.js');
 const parseurl = require('parseurl');
 const querystring = require('querystring');
 

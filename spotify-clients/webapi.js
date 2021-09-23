@@ -26,7 +26,7 @@ module.exports = {
           })
 
           res.on('end', () => {
-            resolve(JSON.parse(data).items)
+            resolve(data)
           })
         })
         req.on('error', error => {
@@ -63,7 +63,7 @@ module.exports = {
             data = data + chunk
           })
           res.on('end', function() {
-            resolve(JSON.parse(data))
+            resolve(data)
           })
         })
 
@@ -101,7 +101,6 @@ module.exports = {
           })
 
           res.on('end', () => {
-            //resolve(JSON.parse(data).items)
             resolve(data)
           })
         })
