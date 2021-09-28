@@ -115,7 +115,7 @@ function prepareTracksForData(tracks) {
 }
 
 async function getAllTracksAndCreatePlaylist(mode, month) {
-  if (mode = "") {
+  if (mode === "") {
     console.log("no mode provided. program ending")
     return;
   }
