@@ -2,42 +2,16 @@ require('dotenv').config()
 var webapi = require('./spotify-clients/webapi.js')
 var accounts = require('./spotify-clients/accounts.js');
 const {overrides} = require('./overrides.js')
-
 const realPlaylistId = process.env.PLAYLISTID
 const testPlaylistId = process.env.TESTPLAYLISTID
 const realArchivePlaylistId = process.env.ARCHIVEPLAYLISTID
 const testArchivePlaylistId = process.env.TESTARCHIVEPLAYLISTID
-
 const refreshTokens = [
   process.env.REFRESHTOKEN1,
   process.env.REFRESHTOKEN2,
   process.env.REFRESHTOKEN3
 ]
-
 const createPlaylistRefreshToken = process.env.REFRESHTOKENPLAYLIST
-
-let mode = ""
-switch(process.argv[2]) {
-  case "publish": // will modify archive & real playlist
-    mode = "publish"
-    break;
-  case "test": // will modify test archive and test playlist
-    mode = "test"
-    break;
-  case "report": // will not modify playlists
-    mode = "report"
-    break;
-  default:
-    mode = ""
-    break;
-}
-console.log(mode)
-if (mode === "") {
-  console.log("You must select a mode. 'publish' will update real playlists, 'test' will update test playlists, 'report' will only print results")
-  return
-}
-
-getAllTracksAndCreatePlaylist()
 
 function createTrackListFromLastWeeksTracks(tracks) {
   let lastWeeksTracks = []
@@ -48,7 +22,7 @@ function createTrackListFromLastWeeksTracks(tracks) {
   return lastWeeksTracks
 }
 
-function filterTopTracksForUser(userTopTracks, lastWeeksTracks, allTracks) {
+function filterTopTracksForUser(userTopTracks, lastWeeksTracks, allTracks, mode) {
   // will return a maximum of 10 tracks, max 5 repeats from last week, max 3 from one album
   let uniqueTracks = []
   let repeatTracks = 0
@@ -140,39 +114,35 @@ function prepareTracksForData(tracks) {
   return modifiedTracks
 }
 
-async function getAllTracksAndCreatePlaylist() {
+async function getAllTracksAndCreatePlaylist(mode, month) {
+  if (mode = "") {
+    console.log("no mode provided. program ending")
+    return;
+  }
   // get tracks from last weeks playlist
   const playlistAuth = await accounts.getTokenFromRefreshToken(createPlaylistRefreshToken)
   const lastWeeksPlaylist = await webapi.getLastWeeksTracks(playlistAuth.access_token, realPlaylistId)
   const lastWeeksTracks = createTrackListFromLastWeeksTracks(JSON.parse(lastWeeksPlaylist).items)
 
-  // determine user order to generate tracks
-  let offset
-  const noOfUsers = refreshTokens.length
-  if (process.argv[3]) {
-    var testMonth = parseInt(process.argv[3]);
-    offset = ((testMonth < 3) ? testMonth : testMonth % noOfUsers)
-    console.log(`you've entered ${testMonth}, so the starting number is ${offset}`)
-  } else {
-    var date = new Date();
-    var month = date.getMonth();
-    offset = ((month < 3) ? month : month % noOfUsers)
-    console.log(`the current month is ${month}, so the starting number is ${offset}`)
-  }
 
   // get oAuth tokens for each user
+  const noOfUsers = refreshTokens.length
   let userTokens = []
   for (i = 0; i < noOfUsers; i++) {
     var userAuth = await accounts.getTokenFromRefreshToken(refreshTokens[i])
     userTokens.push(userAuth.access_token)
   }
 
+  // determine offset to start looping through users - this determines the starting user
+  const offset = ((month < 3) ? month : month % noOfUsers)
+  console.log(`the offset is ${offset}`)
+
   // get top tracks from each user, filter based on rules, and add to new tracks list
   var currentWeekTracks = []
   for (i = 0; i < noOfUsers; i++) {
     var pointer = (i + offset) % noOfUsers;
     var userTopTracks = await webapi.getTopTracksforUser(userTokens[pointer])
-    var eligibleTracks = filterTopTracksForUser(JSON.parse(userTopTracks).items, lastWeeksTracks, currentWeekTracks)
+    var eligibleTracks = filterTopTracksForUser(JSON.parse(userTopTracks).items, lastWeeksTracks, currentWeekTracks, mode)
     currentWeekTracks = currentWeekTracks.concat(eligibleTracks)
   }
   
@@ -191,3 +161,5 @@ async function getAllTracksAndCreatePlaylist() {
     webapi.createPlaylist(playlistAuth.access_token, tracksForData, playlistId, true)
   }
 }
+
+module.exports = { getAllTracksAndCreatePlaylist };
