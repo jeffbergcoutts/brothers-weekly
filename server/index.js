@@ -71,7 +71,7 @@ app.get("/callback", (req, res) => { //callback from oauth flow
 app.get("/sharedweekly", (req, res) => {
   console.log("called /sharedweekly!")
   accounts.getTokenFromRefreshToken(createPlaylistRefreshToken).then( response => {
-    webapi.getLastWeeksTracks(response.access_token, realPlaylistId)
+    webapi.getPlaylistTracks(response.access_token, realPlaylistId)
     .then( response => {
       const data = JSON.parse(response).items
       res.json({

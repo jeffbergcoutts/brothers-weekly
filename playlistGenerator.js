@@ -1,7 +1,9 @@
 require('dotenv').config()
-var webapi = require('./spotify-clients/webapi.js')
-var accounts = require('./spotify-clients/accounts.js');
-const {overrides} = require('./overrides.js')
+const { print } = require("./utils/helpers.js")
+const webapi = require('./spotify-clients/webapi.js')
+const accounts = require('./spotify-clients/accounts.js')
+const { overrides } = require('./utils/overrides.js')
+
 const realPlaylistId = process.env.PLAYLISTID
 const testPlaylistId = process.env.TESTPLAYLISTID
 const realArchivePlaylistId = process.env.ARCHIVEPLAYLISTID
@@ -22,24 +24,48 @@ function createTrackListFromLastWeeksTracks(tracks) {
   return lastWeeksTracks
 }
 
+function prepareTracksForData(tracks) {
+  const modifiedTracks = tracks.map(track => {
+    return 'spotify:track:' + track
+    })
+  return modifiedTracks
+}
+
+function createTrackListFor
+
 function filterTopTracksForUser(userTopTracks, lastWeeksTracks, allTracks, mode) {
-  // will return a maximum of 10 tracks, max 5 repeats from last week, max 3 from one album
+  // will return a maximum of 10 tracks
+  // max 5 repeats from last weeks playlist
+  // max 3 from one album
+  // no repeats from current playlist
+
   let uniqueTracks = []
   let repeatTracks = 0
   let previousAlbums = []
-
   let reportTracks = []
 
   const artistDenylist = overrides.denylist.artists
   const albumDenylist = overrides.denylist.albums
+  
+  // Transform Track data shape to what is needed
+  function Track(albumId, artistId, trackId, trackInfo) {
+    this.albumId = albumId;
+    this.artistId = artistId;
+    this.trackId = trackId;
+    this.trackInfo = trackInfo;
+  }
 
   for (x = 0; x < userTopTracks.length; x++) {
-    let albumName = userTopTracks[x].album.name
-    let album = userTopTracks[x].album.id
-    let artistName = userTopTracks[x].artists[0].name
-    let artist = userTopTracks[x].artists[0].id
-    let trackName = userTopTracks[x].name
-    let track = userTopTracks[x].id
+    const track = new Track()
+    try {
+      track.albumId = userTopTracks[x].album.id
+      track.artistId = userTopTracks[x].artists[0].id
+      track.trackId = userTopTracks[x].id
+      track.trackInfo = `${userTopTracks[x].artists[0].name} - ${userTopTracks[x].album.name} - ${userTopTracks[x].name}`
+    } catch(err) {
+      print(err)
+      return
+    }
     
     let reportTag = ""
     let addTrack = true
@@ -47,24 +73,24 @@ function filterTopTracksForUser(userTopTracks, lastWeeksTracks, allTracks, mode)
     let repeatAlbumCount = 0
 
      // don't add if track is already on the playlist
-    if (allTracks.includes(track)) {
+    if (allTracks.includes(track.trackId)) {
       addTrack = false
       reportTag = "skipped: already on playlist"
     }
 
      // don't add if artist is on denylist
-    if (artistDenylist.includes(artist)) {
+    if (artistDenylist.includes(track.artistId)) {
       addTrack = false
       reportTag = "skipped: artist on denylist"
     }
 
-    if (albumDenylist.includes(album)) {
+    if (albumDenylist.includes(track.albumId)) {
       addTrack = false
       reportTag = "skipped: album on denylist"
     }
 
     // check if track was on last weeks playlist
-    if (lastWeeksTracks.includes(track)) {
+    if (lastWeeksTracks.includes(track.trackId)) {
       repeatTrack = true
       if (repeatTracks > 4) { // don't add if already 5 repeat songs
         addTrack = false
@@ -74,9 +100,9 @@ function filterTopTracksForUser(userTopTracks, lastWeeksTracks, allTracks, mode)
       }
     }
 
-    //TODO need to skip if it's repeats of the same album - not any repeat
-    if (previousAlbums.includes(album)) {
-      repeatAlbumCount = previousAlbums.filter((v) => (v === album)).length;
+    //check if it's already 3 repeats from the same album
+    if (previousAlbums.includes(track.albumId)) {
+      repeatAlbumCount = previousAlbums.filter((v) => (v === track.albumId)).length
       if (repeatAlbumCount > 2) { // don't add if already 2 album repeats (making 3 tracks from the same album)
         addTrack = false
         reportTag = "skipped: album already added for user (over max of 3 tracks)"
@@ -86,44 +112,38 @@ function filterTopTracksForUser(userTopTracks, lastWeeksTracks, allTracks, mode)
     }
 
     if (addTrack === true) {
-      // log
+      // log when track is added
       if (repeatTrack === true) {
         (repeatTracks = repeatTracks + 1)
       }
 
-      previousAlbums.push(album)
+      previousAlbums.push(track.albumId)
       reportTag = (reportTag === "") ? "added: new track!" : reportTag
 
       // add track to playlist
       uniqueTracks.push(track)
     }
-    reportTracks.push(`${reportTag} - ${artistName} - ${albumName} - ${trackName} (${repeatTracks},${repeatAlbumCount})`)
+    reportTracks.push(`${reportTag} - ${track.trackInfo}`)
 
     // stop when 10 tracks are added
     if (uniqueTracks.length === 10) {
-      (mode === "report") && console.log(reportTracks)
+      print(reportTracks)
       return uniqueTracks
     }
   }
 }
 
-function prepareTracksForData(tracks) {
-  const modifiedTracks = tracks.map(track => {
-    return 'spotify:track:' + track;
-    })
-  return modifiedTracks
-}
-
 async function getAllTracksAndCreatePlaylist(mode, month) {
-  if (mode === "") {
-    console.log("no mode provided. program ending")
-    return;
+  const validModes = ['publish', 'report', 'test']
+  if (validModes.indexOf(mode) === -1) {
+    print("no mode or invalid provided. program ending")
+    return
   }
+  
   // get tracks from last weeks playlist
   const playlistAuth = await accounts.getTokenFromRefreshToken(createPlaylistRefreshToken)
-  const lastWeeksPlaylist = await webapi.getLastWeeksTracks(playlistAuth.access_token, realPlaylistId)
+  const lastWeeksPlaylist = await webapi.getPlaylistTracks(playlistAuth.access_token, realPlaylistId)
   const lastWeeksTracks = createTrackListFromLastWeeksTracks(JSON.parse(lastWeeksPlaylist).items)
-
 
   // get oAuth tokens for each user
   const noOfUsers = refreshTokens.length
@@ -135,12 +155,12 @@ async function getAllTracksAndCreatePlaylist(mode, month) {
 
   // determine offset to start looping through users - this determines the starting user
   const offset = ((month < 3) ? month : month % noOfUsers)
-  console.log(`the offset is ${offset}`)
+  print(`the offset is ${offset}`)
 
   // get top tracks from each user, filter based on rules, and add to new tracks list
   var currentWeekTracks = []
   for (i = 0; i < noOfUsers; i++) {
-    var pointer = (i + offset) % noOfUsers;
+    var pointer = (i + offset) % noOfUsers
     var userTopTracks = await webapi.getTopTracksforUser(userTokens[pointer])
     var eligibleTracks = filterTopTracksForUser(JSON.parse(userTopTracks).items, lastWeeksTracks, currentWeekTracks, mode)
     currentWeekTracks = currentWeekTracks.concat(eligibleTracks)
@@ -155,11 +175,11 @@ async function getAllTracksAndCreatePlaylist(mode, month) {
 
     // replace playlist with new tracks
     tracksForData = prepareTracksForData(currentWeekTracks)
-    console.log(currentWeekTracks)
-    console.log(tracksForData)
+    print(currentWeekTracks)
+    print(tracksForData)
     const playlistId = (mode === "publish") ? realPlaylistId : testPlaylistId
     webapi.createPlaylist(playlistAuth.access_token, tracksForData, playlistId, true)
   }
 }
 
-module.exports = { getAllTracksAndCreatePlaylist };
+module.exports = { getAllTracksAndCreatePlaylist }

@@ -78,7 +78,7 @@ module.exports = {
       }
     )
   },
-  getLastWeeksTracks:
+  getPlaylistTracks:
   function (token, playlistId) {
     return new Promise(
       function (resolve, reject) {
@@ -94,7 +94,7 @@ module.exports = {
           }
         }
         const req = https.request(options, res => {
-          console.log(`getLastWeeksTracks: statusCode: ${res.statusCode}`)
+          console.log(`getPlaylistTracks: statusCode: ${res.statusCode}`)
           let data = ''
           res.on('data', (chunk) => {
             data += chunk

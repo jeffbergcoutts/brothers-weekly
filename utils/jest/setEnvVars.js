@@ -1,0 +1,1 @@
+process.env.LOGTOCONSOLE = 'false'
