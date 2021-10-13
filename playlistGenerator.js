@@ -24,16 +24,16 @@ function createTrackListFromLastWeeksTracks(tracks) {
   return lastWeeksTracks
 }
 
-function prepareTracksForData(tracks) {
-  const modifiedTracks = tracks.map(track => {
+function createTrackListForPlaylistCreation(trackIds) {
+  // takes an array of trackID's and returns an array with the correct format to create a playlist
+  const trackList = trackIds.map(track => {
     return 'spotify:track:' + track
     })
-  return modifiedTracks
+  return trackList
 }
 
-function createTrackListFor
-
-function filterTopTracksForUser(userTopTracks, lastWeeksTracks, allTracks, mode) {
+function filterTopTracksForUser(topTracksTrackForUser, lastWeeksTracks, currentWeekTracks) {
+  // Takes a list of Tracks 
   // will return a maximum of 10 tracks
   // max 5 repeats from last weeks playlist
   // max 3 from one album
@@ -55,13 +55,13 @@ function filterTopTracksForUser(userTopTracks, lastWeeksTracks, allTracks, mode)
     this.trackInfo = trackInfo;
   }
 
-  for (x = 0; x < userTopTracks.length; x++) {
+  for (x = 0; x < topTracksTrackForUser.length; x++) {
     const track = new Track()
     try {
-      track.albumId = userTopTracks[x].album.id
-      track.artistId = userTopTracks[x].artists[0].id
-      track.trackId = userTopTracks[x].id
-      track.trackInfo = `${userTopTracks[x].artists[0].name} - ${userTopTracks[x].album.name} - ${userTopTracks[x].name}`
+      track.albumId = topTracksTrackForUser[x].album.id
+      track.artistId = topTracksTrackForUser[x].artists[0].id
+      track.trackId = topTracksTrackForUser[x].id
+      track.trackInfo = `${topTracksTrackForUser[x].artists[0].name} - ${topTracksTrackForUser[x].album.name} - ${topTracksTrackForUser[x].name}`
     } catch(err) {
       print(err)
       return
@@ -73,7 +73,7 @@ function filterTopTracksForUser(userTopTracks, lastWeeksTracks, allTracks, mode)
     let repeatAlbumCount = 0
 
      // don't add if track is already on the playlist
-    if (allTracks.includes(track.trackId)) {
+    if (currentWeekTracks.includes(track.trackId)) {
       addTrack = false
       reportTag = "skipped: already on playlist"
     }
@@ -121,7 +121,7 @@ function filterTopTracksForUser(userTopTracks, lastWeeksTracks, allTracks, mode)
       reportTag = (reportTag === "") ? "added: new track!" : reportTag
 
       // add track to playlist
-      uniqueTracks.push(track)
+      uniqueTracks.push(track.trackId)
     }
     reportTracks.push(`${reportTag} - ${track.trackInfo}`)
 
@@ -161,24 +161,24 @@ async function getAllTracksAndCreatePlaylist(mode, month) {
   var currentWeekTracks = []
   for (i = 0; i < noOfUsers; i++) {
     var pointer = (i + offset) % noOfUsers
-    var userTopTracks = await webapi.getTopTracksforUser(userTokens[pointer])
-    var eligibleTracks = filterTopTracksForUser(JSON.parse(userTopTracks).items, lastWeeksTracks, currentWeekTracks, mode)
+    var topTracksTrackForUser = await webapi.getTopTracksforUser(userTokens[pointer])
+    var eligibleTracks = filterTopTracksForUser(JSON.parse(topTracksTrackForUser).items, lastWeeksTracks, currentWeekTracks)
     currentWeekTracks = currentWeekTracks.concat(eligibleTracks)
   }
   
-  let tracksForData = ""
+  let trackList = ""
   if (mode != "report") {
     // add tracks to archive
-    tracksForData = prepareTracksForData(lastWeeksTracks)
+    trackList = createTrackListForPlaylistCreation(lastWeeksTracks)
     const archivePlaylistId = (mode === "publish") ? realArchivePlaylistId : testArchivePlaylistId
-    webapi.createPlaylist(playlistAuth.access_token, tracksForData, archivePlaylistId, false)
+    webapi.createPlaylist(playlistAuth.access_token, trackList, archivePlaylistId, false)
 
     // replace playlist with new tracks
-    tracksForData = prepareTracksForData(currentWeekTracks)
+    trackList = createTrackListForPlaylistCreation(currentWeekTracks)
     print(currentWeekTracks)
-    print(tracksForData)
+    print(trackList)
     const playlistId = (mode === "publish") ? realPlaylistId : testPlaylistId
-    webapi.createPlaylist(playlistAuth.access_token, tracksForData, playlistId, true)
+    webapi.createPlaylist(playlistAuth.access_token, trackList, playlistId, true)
   }
 }
 

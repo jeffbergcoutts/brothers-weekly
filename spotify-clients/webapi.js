@@ -39,11 +39,11 @@ module.exports = {
     )
   },
   createPlaylist:
-  function (token, tracks, playlistId, replace) {
+  function (token, trackList, playlistId, replace) {
     return new Promise(
       function (resolve, reject) {
         const method = (replace === true) ? "PUT" : "POST"
-        const postData = `{"uris": ${JSON.stringify(tracks)}}`
+        const postData = `{"uris": ${JSON.stringify(trackList)}}`
         const options = {
           hostname: HOSTNAME,
           port: PORT,
@@ -101,6 +101,11 @@ module.exports = {
           })
 
           res.on('end', () => {
+            // here I should parse the JSON response into a Javascript Object
+            // then I should transform the data into an object with only the data I need
+            // then I should return this data as a javascript object that the consumers can user
+            // server/index.js transform it into JSON and returns it to the client
+            // playlistGenerator used the javascript object itself
             resolve(data)
           })
         })
