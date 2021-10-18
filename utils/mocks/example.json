@@ -1,0 +1,96 @@
+    {
+      "added_at": "2021-10-04T07:02:12Z",
+      "added_by": {
+        "external_urls": {
+          "spotify": "https://open.spotify.com/user/bergcoutts"
+        },
+        "href": "https://api.spotify.com/v1/users/bergcoutts",
+        "id": "bergcoutts",
+        "type": "user",
+        "uri": "spotify:user:bergcoutts"
+      },
+      "is_local": false,
+      "primary_color": null,
+      "track": {
+        "album": {
+          "album_type": "album",
+          "artists": [
+            {
+              "external_urls": {
+                "spotify": "https://open.spotify.com/artist/6kFay2DQ5aZfeu5OsrF3Pw"
+              },
+              "href": "https://api.spotify.com/v1/artists/6kFay2DQ5aZfeu5OsrF3Pw",
+              "id": "6kFay2DQ5aZfeu5OsrF3Pw",
+              "name": "The Walkmen",
+              "type": "artist",
+              "uri": "spotify:artist:6kFay2DQ5aZfeu5OsrF3Pw"
+            }
+          ],
+          "available_markets": [],
+          "external_urls": {
+            "spotify": "https://open.spotify.com/album/5OFDjlg8CCAOzk0fbOtXte"
+          },
+          "href": "https://api.spotify.com/v1/albums/5OFDjlg8CCAOzk0fbOtXte",
+          "id": "5OFDjlg8CCAOzk0fbOtXte",
+          "images": [
+            {
+              "height": 640,
+              "url": "https://i.scdn.co/image/ab67616d0000b2737b067a235d3babb610a15ad2",
+              "width": 640
+            },
+            {
+              "height": 300,
+              "url": "https://i.scdn.co/image/ab67616d00001e027b067a235d3babb610a15ad2",
+              "width": 300
+            },
+            {
+              "height": 64,
+              "url": "https://i.scdn.co/image/ab67616d000048517b067a235d3babb610a15ad2",
+              "width": 64
+            }
+          ],
+          "name": "Everyone Who Pretended to Like Me Is Gone",
+          "release_date": "2009-06-02",
+          "release_date_precision": "day",
+          "total_tracks": 14,
+          "type": "album",
+          "uri": "spotify:album:5OFDjlg8CCAOzk0fbOtXte"
+        },
+        "artists": [
+          {
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/6kFay2DQ5aZfeu5OsrF3Pw"
+            },
+            "href": "https://api.spotify.com/v1/artists/6kFay2DQ5aZfeu5OsrF3Pw",
+            "id": "6kFay2DQ5aZfeu5OsrF3Pw",
+            "name": "The Walkmen",
+            "type": "artist",
+            "uri": "spotify:artist:6kFay2DQ5aZfeu5OsrF3Pw"
+          }
+        ],
+        "available_markets": [  ],
+        "disc_number": 1,
+        "duration_ms": 272560,
+        "episode": false,
+        "explicit": false,
+        "external_ids": {
+          "isrc": "USTC90984975"
+        },
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/7DKgXqlmHxZkZepkWBN7WZ"
+        },
+        "href": "https://api.spotify.com/v1/tracks/7DKgXqlmHxZkZepkWBN7WZ",
+        "id": "7DKgXqlmHxZkZepkWBN7WZ",
+        "is_local": false,
+        "name": "French Vacation",
+        "popularity": 14,
+        "preview_url": "https://p.scdn.co/mp3-preview/cea25878a2001b4dd0b0dcfcdbfb043856311357?cid=774b29d4f13844c495f206cafdad9c86",
+        "track": true,
+        "track_number": 6,
+        "type": "track",
+        "uri": "spotify:track:7DKgXqlmHxZkZepkWBN7WZ"
+      },
+      "video_thumbnail": {
+        "url": null
+      }
+    }

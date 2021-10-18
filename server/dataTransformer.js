@@ -1,14 +1,3 @@
-function Track(albumId, artistId, trackId, albumUrl) {
-  this.albumId = albumId;
-  this.artistId = artistId;
-  this.trackId = trackId;
-  this.albumUrl = albumUrl;
-}
-
-function Response(tracks) {
-  return tracks
-}
-
 function transformTracksResponse(playlist) {
   // takes a JSON response from the Spotify Web API with all tracks from a Playlist
   // returns a JSON object with just the data needed to display in the front end
@@ -28,7 +17,6 @@ function transformTracksResponse(playlist) {
     })
   ))
 
-  // const data = JSON.stringify(testData)
   return JSON.stringify(data)
 }
 
