@@ -6,32 +6,51 @@ function DisplayTracks(props) {
   React.useEffect(() => {
     fetch(props.api)
       .then((res) => res.json())
-      .then((data) => {
-        setPageData(data)
-      })
-  }, [props]);
+      .then((res) => setPageData(res))
+  }, [props.api]);
 
-  function AllImages() {
-    if (pageData) {
-      const allImages = pageData.data
-      return (
-        <div>
-          {allImages.map((album, index) => (
-            <img alt={index} src={album.track.album.images[1].url} width="200" height="200"/>
-          ))}
-        </div>
-      )      
-    }
+  const trackList = {
+    display: 'flex',
+    flexDirection: 'row',
+    flexWrap: 'wrap'
+  }
 
-    return null
+  const albumColumn = {
+    display: 'flex',
+    flexDirection: 'row',
+    width: '300px'
+  }
+
+  const trackColumn = {
+    display: 'flex',
+    flexDirection: 'column'
   }
 
   return (
     <div>
-      <p><b>Here is your {props.playlistName}</b></p>
-      <AllImages />
+      {
+        (pageData) && (
+          <div>
+            <h1>{props.playlistName}</h1>
+            <div style={trackList}>
+            {pageData.map((track, index) => (
+              <div style={albumColumn}>
+                <div>
+                  <img alt={index} src={track.albumImageUrl} width="100" height="100" />
+                </div>
+                <div style={trackColumn}>
+                  <div><a href={track.artistUrl} target="_blank" rel="noreferrer">{track.artistName}</a></div>
+                  <div><a href={track.albumUrl} target="_blank" rel="noreferrer">{track.albumName}</a></div>
+                  <div><a href={track.trackUrl} target="_blank" rel="noreferrer">{track.trackName}</a></div>
+                </div>
+              </div>
+            ))}
+            </div>
+          </div>
+        )
+      }
     </div>
-  );
+  )      
 }
 
 export default DisplayTracks;

@@ -40,12 +40,12 @@ Build and Run locally:
 
 ```bash
 # test production build
-$ npm run build
-$ npm start
+$ yarn build
+$ yarn start # served at http://localhost:3001/
 
 # test client changes locally
 $ cd client
-$ yarn start
+$ yarn start # served at http://localhost:3000/
 ```
 
 Deploy to Heroku

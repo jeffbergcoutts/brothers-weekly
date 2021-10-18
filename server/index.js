@@ -3,6 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const webapi = require('../spotify-clients/webapi.js');
 const accounts = require('../spotify-clients/accounts.js');
+const { transformTracksResponse } = require("./dataTransformer.js")
 const parseurl = require('parseurl');
 const querystring = require('querystring');
 
@@ -73,10 +74,8 @@ app.get("/sharedweekly", (req, res) => {
   accounts.getTokenFromRefreshToken(createPlaylistRefreshToken).then( response => {
     webapi.getPlaylistTracks(response.access_token, realPlaylistId)
     .then( response => {
-      const data = JSON.parse(response).items
-      res.json({
-        data
-      });
+      const data = transformTracksResponse(response)
+      res.send(data);
     })
     .catch( err => {
       res.end(err)
@@ -88,13 +87,11 @@ app.get("/recentlyplayed", (req, res) => {
   console.log("called /recentlyplayed!")
   
   // Get Recently Played from Spotify API
-  webapi.getRecentlyPlayed(req.session.accessToken)
-    .then( response => {
-      const data = JSON.parse(response).items
-      res.json({
-        data
-      });
-    })
+  webapi.getUsersRecentlyPlayedTracks(req.session.accessToken)
+  .then( response => {
+    const data = transformTracksResponse(response)
+    res.send(data);
+  })
     .catch( err => {
       res.end(err)
     })
