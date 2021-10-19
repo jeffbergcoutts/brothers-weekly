@@ -26,11 +26,12 @@ function getTrackIdsFromPlaylist(playlist) {
 }
 
 function createTrackListForPlaylistCreation(trackIds) {
-  // takes an array of trackID's and returns an array with the correct format to create a playlist
+  // takes an array of trackID's and returns a JSON object in the correct format to create a playlist
   const trackList = trackIds.map(track => {
     return 'spotify:track:' + track
     })
-  return trackList
+  
+  return `{"uris": ${JSON.stringify(trackList)}}`
 }
 
 function filterTopTracksForUser(topTracksForUser, lastWeeksTracks, currentWeekTracks) {
@@ -141,7 +142,8 @@ async function getAllTracksAndCreatePlaylist(mode, month) {
   }
   
   // get tracks from last weeks playlist
-  const playlistAuth = await accounts.getTokenFromRefreshToken(createPlaylistRefreshToken)
+  const playlistAuthRaw = await accounts.getTokenFromRefreshToken(createPlaylistRefreshToken)
+  const playlistAuth = JSON.parse(playlistAuthRaw)
   const lastWeeksPlaylist = await webapi.getPlaylistTracks(playlistAuth.access_token, realPlaylistId)
   const lastWeeksTracks = getTrackIdsFromPlaylist(lastWeeksPlaylist)
 
@@ -149,7 +151,8 @@ async function getAllTracksAndCreatePlaylist(mode, month) {
   const noOfUsers = refreshTokens.length
   let userTokens = []
   for (i = 0; i < noOfUsers; i++) {
-    var userAuth = await accounts.getTokenFromRefreshToken(refreshTokens[i])
+    var userAuthRaw = await accounts.getTokenFromRefreshToken(refreshTokens[i])
+    const userAuth = JSON.parse(userAuthRaw)
     userTokens.push(userAuth.access_token)
   }
 
@@ -171,14 +174,14 @@ async function getAllTracksAndCreatePlaylist(mode, month) {
     // add tracks to archive
     trackList = createTrackListForPlaylistCreation(lastWeeksTracks)
     const archivePlaylistId = (mode === "publish") ? realArchivePlaylistId : testArchivePlaylistId
-    webapi.createPlaylist(playlistAuth.access_token, trackList, archivePlaylistId, false)
+    webapi.addToPlaylist(playlistAuth.access_token, trackList, archivePlaylistId)
 
     // replace playlist with new tracks
     trackList = createTrackListForPlaylistCreation(currentWeekTracks)
     print(currentWeekTracks)
     print(trackList)
     const playlistId = (mode === "publish") ? realPlaylistId : testPlaylistId
-    webapi.createPlaylist(playlistAuth.access_token, trackList, playlistId, true)
+    webapi.createPlaylist(playlistAuth.access_token, trackList, playlistId)
   }
 }
 

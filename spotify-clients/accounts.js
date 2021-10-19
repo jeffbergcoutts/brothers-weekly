@@ -1,6 +1,7 @@
 require('dotenv').config()
 const querystring = require('querystring')
 const https = require('https')
+const { callback, handleError } = require('./helpers.js');
 
 const clientID = process.env.CLIENTID
 const clientSecret = process.env.CLIENTSECRET
@@ -20,69 +21,41 @@ const options = {
   }
 }
 
-module.exports = {
-  getTokenFromRefreshToken:
-  function (token) {
-    return new Promise(
-      function (resolve, reject) {
-        var postData = querystring.stringify({
-          'grant_type': 'refresh_token',
-          'refresh_token': token
-        })
+function getTokenFromRefreshToken(token) {
+  return new Promise(
+    function (resolve, reject) {
+      var postData = querystring.stringify({
+        'grant_type': 'refresh_token',
+        'refresh_token': token
+      })
+      var req = https.request(options, callback("/api/token : refresh_token", resolve))
 
-        var req = https.request(options, res => {
-          console.log('getTokenFromRefreshToken:' + res.statusCode)
-          res.setEncoding('utf8')
-          let data = ''
-          res.on('data', chunk => {
-            data = data + chunk
-          })
-          res.on('end', () => {
-            resolve(JSON.parse(data))
-          })
-        })
-
-        req.on('error', err => {
-          console.error(err)
-          reject(err)
-        })
-        req.write(postData)
-        req.end()
-      }
-    )
-  },
-  requestToken:
-  function (code) {
-    return new Promise(
-      function (resolve, reject) {
-        var postData = querystring.stringify({
-          'grant_type': 'authorization_code',
-          'code': code,
-          'redirect_uri': `${baseURL}callback`,
-          'client_id': clientID,
-          'client_secret': clientSecret
-        })
-        var req = https.request(options, res => {
-          console.log('requestToken:' + res.statusCode)
-          res.setEncoding('utf8')
-          let data = ''
-          res.on('data', chunk => {
-            data = data + chunk
-          })
-          res.on('end', () => {
-            resolve(JSON.parse(data))
-          })
-        })
-
-        req.on('error', err => {
-          console.error(err)
-          reject(err)
-        })
-
-        req.write(postData)
-        req.end()
-
-      }
-    )
-  }
+      req.on('error', handleError(reject))
+      req.write(postData)
+      req.end()
+    }
+  )
 }
+    
+function requestToken(code) {
+  return new Promise(
+    function (resolve, reject) {
+      var postData = querystring.stringify({
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': `${baseURL}callback`,
+        'client_id': clientID,
+        'client_secret': clientSecret
+      })
+
+      var req = https.request(options, callback("/api/token : authorization_code", resolve))
+
+      req.on('error', handleError(reject))
+      req.write(postData)
+      req.end()
+
+    }
+  )
+}
+
+module.exports = { requestToken, getTokenFromRefreshToken }

@@ -56,42 +56,48 @@ app.get("/callback", (req, res) => { //callback from oauth flow
 
   // get Token using code
   accounts.requestToken(code)
-    .then( res => {
+    .then( response => JSON.parse(response))
+    .then( response => {
       // store Token in cookie for later use
-      req.session.accessToken = res.access_token;
-      req.session.refreshToken = res.refresh_token;
+      req.session.accessToken = response.access_token;
+      req.session.refreshToken = response.refresh_token;
 
       var date = new Date();
       var expiresIn = (res.expires_in * 1000) + date.getTime();
       req.session.expiryDate = expiresIn;
-  }).then(() => {
-    res.redirect(302, baseURL)
+    }).then(() => {
+      res.redirect(302, baseURL)
   });
 });
 
 app.get("/sharedweekly", (req, res) => {
+  // Get Playlist Tracks from Spotify Web API
   console.log("called /sharedweekly!")
-  accounts.getTokenFromRefreshToken(createPlaylistRefreshToken).then( response => {
-    webapi.getPlaylistTracks(response.access_token, realPlaylistId)
+  accounts.getTokenFromRefreshToken(createPlaylistRefreshToken)
+    .then( response => JSON.parse(response))
     .then( response => {
-      const data = transformTracksResponse(response)
-      res.send(data);
+      webapi.getPlaylistTracks(response.access_token, realPlaylistId)
+        .then( response => {
+          const data = transformTracksResponse(response)
+          res.send(data); // returns JSON to front end
+        })
+        .catch( err => {
+          res.end(err)
+        })
     })
     .catch( err => {
       res.end(err)
     })
-  })
 })
 
 app.get("/recentlyplayed", (req, res) => {
+  // Get User's Recently Played Tracks from Spotify Web API
   console.log("called /recentlyplayed!")
-  
-  // Get Recently Played from Spotify API
   webapi.getUsersRecentlyPlayedTracks(req.session.accessToken)
-  .then( response => {
-    const data = transformTracksResponse(response)
-    res.send(data);
-  })
+    .then( response => {
+      const data = transformTracksResponse(response)
+      res.send(data); // returns JSON to front end
+    })
     .catch( err => {
       res.end(err)
     })
