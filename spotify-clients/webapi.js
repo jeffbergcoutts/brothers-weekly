@@ -83,7 +83,7 @@ function createPlaylist(token, trackList, playlistId) {
   )
 }
 
-function addToPlaylist(token, trackList, playlistId, replace) {
+function addToPlaylist(token, trackList, playlistId) {
   return new Promise(
     function (resolve, reject) {
       const path = `/v1/playlists/${playlistId}/tracks`

@@ -1,40 +1,11 @@
 require('dotenv').config()
-const { print } = require("./utils/helpers.js")
-const webapi = require('./spotify-clients/webapi.js')
-const accounts = require('./spotify-clients/accounts.js')
+const { print, getTrackIdsFromPlaylist, createTrackListForPlaylistCreation } = require("./utils/helpers.js")
+const { transformUsersTopTracksResponse } = require("../spotify-clients/dataTransformers.js")
+const webapi = require('../spotify-clients/webapi.js')
+const accounts = require('../spotify-clients/accounts.js')
 const { overrides } = require('./utils/overrides.js')
 
-const realPlaylistId = process.env.PLAYLISTID
-const testPlaylistId = process.env.TESTPLAYLISTID
-const realArchivePlaylistId = process.env.ARCHIVEPLAYLISTID
-const testArchivePlaylistId = process.env.TESTARCHIVEPLAYLISTID
-const refreshTokens = [
-  process.env.REFRESHTOKEN1,
-  process.env.REFRESHTOKEN2,
-  process.env.REFRESHTOKEN3
-]
-const createPlaylistRefreshToken = process.env.REFRESHTOKENPLAYLIST
-
-function getTrackIdsFromPlaylist(playlist) {
-  const tracks = JSON.parse(playlist).items
-  let lastWeeksTracks = []
-  for (i = 0; i < tracks.length; i++) {
-    let track = tracks[i].track.id
-    lastWeeksTracks.push(track)
-  }
-  return lastWeeksTracks
-}
-
-function createTrackListForPlaylistCreation(trackIds) {
-  // takes an array of trackID's and returns a JSON object in the correct format to create a playlist
-  const trackList = trackIds.map(track => {
-    return 'spotify:track:' + track
-    })
-  
-  return `{"uris": ${JSON.stringify(trackList)}}`
-}
-
-function filterTopTracksForUser(topTracksForUser, lastWeeksTracks, currentWeekTracks) {
+function filterUsersTopTracks(topTracksForUser, lastWeeksTracks, currentWeekTracks) {
   // Takes a JSON object of a user Top Tracks as returned from the Spotify Web Api
   // will return a maximum of 10 track Id's in an array
   // general rules: 
@@ -44,26 +15,20 @@ function filterTopTracksForUser(topTracksForUser, lastWeeksTracks, currentWeekTr
   //   max 5 repeats from last weeks playlist
   //   max 3 from one album
 
+  const artistDenylist = overrides.denylist.artists
+  const albumDenylist = overrides.denylist.albums
+
   let uniqueTracks = []
   let repeatTracks = 0
   let previousAlbums = []
   let reportTracks = []
-
-  const artistDenylist = overrides.denylist.artists
-  const albumDenylist = overrides.denylist.albums
   
-  const tracks = JSON.parse(topTracksForUser).items
+  const tracks = transformUsersTopTracksResponse(topTracksForUser)
 
   for (x = 0; x < tracks.length; x++) {
-    let [albumId, artistId, trackId] = ["", "", ""]
-    try {
-      albumId = tracks[x].album.id
-      artistId = tracks[x].artists[0].id
-      trackId = tracks[x].id
-    } catch(err) {
-      print(err)
-      return
-    }
+    const albumId = tracks[x].albumId
+    const artistId = tracks[x].artistId
+    const trackId = tracks[x].trackId
     
     let reportTag = ""
     let addTrack = true
@@ -122,9 +87,8 @@ function filterTopTracksForUser(topTracksForUser, lastWeeksTracks, currentWeekTr
       uniqueTracks.push(trackId)
     }
     
-    // report track names for debugging
-    const trackReportingInfo = `${tracks[x].artists[0].name} - ${tracks[x].album.name} - ${tracks[x].name}`
-    reportTracks.push(`${reportTag} - ${trackReportingInfo}`)
+    // report track names and action for debugging
+    reportTracks.push(`${reportTag} - ${tracks[x].artistName} - ${tracks[x].albumName} - ${tracks[x].trackName}`)
     
     // stop when 10 tracks are collected
     if (uniqueTracks.length === 10) {
@@ -135,16 +99,39 @@ function filterTopTracksForUser(topTracksForUser, lastWeeksTracks, currentWeekTr
 }
 
 async function getAllTracksAndCreatePlaylist(mode, month) {
+  const refreshTokens = [
+    process.env.REFRESHTOKEN1,
+    process.env.REFRESHTOKEN2,
+    process.env.REFRESHTOKEN3
+  ]
+  const createPlaylistRefreshToken = process.env.REFRESHTOKENPLAYLIST
+
+  // run program in different modes and reject if invalid mode provided
   const validModes = ['publish', 'report', 'test']
   if (validModes.indexOf(mode) === -1) {
     print("no mode or invalid provided. program ending")
     return
   }
+
+  let archivePlaylistId = ""
+  let playlistId = ""
+  switch(mode) {
+    case "publish":
+      archivePlaylistId = process.env.ARCHIVEPLAYLISTID
+      playlistId = process.env.PLAYLISTID
+      break
+    case "test":
+      archivePlaylistId = process.env.TESTARCHIVEPLAYLISTID
+      playlistId = process.env.TESTPLAYLISTID
+      break
+    case "report":
+      break
+  }
   
   // get tracks from last weeks playlist
   const playlistAuthRaw = await accounts.getTokenFromRefreshToken(createPlaylistRefreshToken)
   const playlistAuth = JSON.parse(playlistAuthRaw)
-  const lastWeeksPlaylist = await webapi.getPlaylistTracks(playlistAuth.access_token, realPlaylistId)
+  const lastWeeksPlaylist = await webapi.getPlaylistTracks(playlistAuth.access_token, playlistId)
   const lastWeeksTracks = getTrackIdsFromPlaylist(lastWeeksPlaylist)
 
   // get oAuth tokens for each user
@@ -165,22 +152,19 @@ async function getAllTracksAndCreatePlaylist(mode, month) {
   for (i = 0; i < noOfUsers; i++) {
     var pointer = (i + offset) % noOfUsers
     var topTracksForUser = await webapi.getUsersTopTracks(userTokens[pointer])
-    var eligibleTracks = filterTopTracksForUser(topTracksForUser, lastWeeksTracks, currentWeekTracks)
+    var eligibleTracks = filterUsersTopTracks(topTracksForUser, lastWeeksTracks, currentWeekTracks)
     currentWeekTracks = currentWeekTracks.concat(eligibleTracks)
   }
   
+  // update archive playlist and shared weekly playlist
   let trackList = ""
   if (mode != "report") {
     // add tracks to archive
     trackList = createTrackListForPlaylistCreation(lastWeeksTracks)
-    const archivePlaylistId = (mode === "publish") ? realArchivePlaylistId : testArchivePlaylistId
     webapi.addToPlaylist(playlistAuth.access_token, trackList, archivePlaylistId)
 
     // replace playlist with new tracks
     trackList = createTrackListForPlaylistCreation(currentWeekTracks)
-    print(currentWeekTracks)
-    print(trackList)
-    const playlistId = (mode === "publish") ? realPlaylistId : testPlaylistId
     webapi.createPlaylist(playlistAuth.access_token, trackList, playlistId)
   }
 }
