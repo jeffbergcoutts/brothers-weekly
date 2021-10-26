@@ -1,5 +1,5 @@
 require('dotenv').config()
-const { print, getTrackIdsFromPlaylist, createTrackListForPlaylistCreation } = require("./utils/helpers.js")
+const { print, getTrackIdsFromPlaylist, createTrackListForPlaylistCreation, getOffsetForPlaylistUserOrder } = require("./utils/helpers.js")
 const { transformUsersTopTracksResponse } = require("../spotify-clients/dataTransformers.js")
 const webapi = require('../spotify-clients/webapi.js')
 const accounts = require('../spotify-clients/accounts.js')
@@ -98,19 +98,19 @@ function filterUsersTopTracks(topTracksForUser, lastWeeksTracks, currentWeekTrac
   }
 }
 
-async function getAllTracksAndCreatePlaylist(mode, month) {
-  const refreshTokens = [
+async function getAllTracksAndCreatePlaylist(mode, weekNumber) {
+  const userRefreshTokens = [
     process.env.REFRESHTOKEN1,
     process.env.REFRESHTOKEN2,
     process.env.REFRESHTOKEN3
   ]
-  const createPlaylistRefreshToken = process.env.REFRESHTOKENPLAYLIST
-
+  const playlistOwnerRefreshToken = process.env.REFRESHTOKENPLAYLIST
   // run program in different modes and reject if invalid mode provided
   const validModes = ['publish', 'report', 'test']
   if (validModes.indexOf(mode) === -1) {
-    print("no mode or invalid provided. program ending")
-    return
+    const errorMessage = "no mode or invalid provided. program ending"
+    print(errorMessage)
+    return errorMessage
   }
 
   let archivePlaylistId = ""
@@ -125,48 +125,47 @@ async function getAllTracksAndCreatePlaylist(mode, month) {
       playlistId = process.env.TESTPLAYLISTID
       break
     case "report":
+      playlistId = process.env.PLAYLISTID
       break
   }
   
   // get tracks from last weeks playlist
-  const playlistAuthRaw = await accounts.getTokenFromRefreshToken(createPlaylistRefreshToken)
-  const playlistAuth = JSON.parse(playlistAuthRaw)
-  const lastWeeksPlaylist = await webapi.getPlaylistTracks(playlistAuth.access_token, playlistId)
+  const playlistOwnerAuth = await accounts.getTokenFromRefreshToken(playlistOwnerRefreshToken)
+  const playlistOwnerAccessToken = JSON.parse(playlistOwnerAuth).access_token
+  const lastWeeksPlaylist = await webapi.getPlaylistTracks(playlistOwnerAccessToken, playlistId)
   const lastWeeksTracks = getTrackIdsFromPlaylist(lastWeeksPlaylist)
 
-  // get oAuth tokens for each user
-  const noOfUsers = refreshTokens.length
-  let userTokens = []
-  for (i = 0; i < noOfUsers; i++) {
-    var userAuthRaw = await accounts.getTokenFromRefreshToken(refreshTokens[i])
-    const userAuth = JSON.parse(userAuthRaw)
-    userTokens.push(userAuth.access_token)
-  }
+  const noOfUsers = userRefreshTokens.length
+  print(`no of users: ${noOfUsers}`)
 
-  // determine offset to start looping through users - this determines the starting user
-  const offset = ((month < 3) ? month : month % noOfUsers)
-  print(`the offset is ${offset}`)
+  const offset = getOffsetForPlaylistUserOrder(weekNumber, noOfUsers)
+  print(`offset: ${offset}`)
 
   // get top tracks from each user, filter based on rules, and add to new tracks list
   var currentWeekTracks = []
   for (i = 0; i < noOfUsers; i++) {
-    var pointer = (i + offset) % noOfUsers
-    var topTracksForUser = await webapi.getUsersTopTracks(userTokens[pointer])
+    var pointer = ((i + offset) % noOfUsers) // based order on offset, determined by week number
+    print(`pointer: ${pointer}`)
+
+    var userAuth = await accounts.getTokenFromRefreshToken(userRefreshTokens[pointer])
+    const userAccessToken = JSON.parse(userAuth).access_token
+
+    var topTracksForUser = await webapi.getUsersTopTracks(userAccessToken)
     var eligibleTracks = filterUsersTopTracks(topTracksForUser, lastWeeksTracks, currentWeekTracks)
+
     currentWeekTracks = currentWeekTracks.concat(eligibleTracks)
   }
   
   // update archive playlist and shared weekly playlist
-  let trackList = ""
   if (mode != "report") {
     // add tracks to archive
-    trackList = createTrackListForPlaylistCreation(lastWeeksTracks)
-    webapi.addToPlaylist(playlistAuth.access_token, trackList, archivePlaylistId)
+    const archiveTrackList = createTrackListForPlaylistCreation(lastWeeksTracks)
+    webapi.addToPlaylist(playlistOwnerAccessToken, archiveTrackList, archivePlaylistId)
 
     // replace playlist with new tracks
-    trackList = createTrackListForPlaylistCreation(currentWeekTracks)
-    webapi.createPlaylist(playlistAuth.access_token, trackList, playlistId)
+    const trackList = createTrackListForPlaylistCreation(currentWeekTracks)
+    webapi.createPlaylist(playlistOwnerAccessToken, trackList, playlistId)
   }
 }
 
-module.exports = { getAllTracksAndCreatePlaylist }
+module.exports = { filterUsersTopTracks, getAllTracksAndCreatePlaylist }
