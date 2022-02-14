@@ -9,7 +9,9 @@ const overrides = {
             "6FGyqglqi0oS3tl4SxyZxf",
             "1a4SgsQYl2B2PmI5XffWW5",
             "3wZTKnhwWhTW5EwfyGc4OT",
-            "7gKdoim3rYHoNGw4p71kJx"
+            "7gKdoim3rYHoNGw4p71kJx",
+            "1JhBsDO3UOMEVSKVP5oN7E",
+            "3Gt7rOjcZQoHCfnKl5AkK7"
         ],
         artists: [
             "1V95p8oWGxXlpcFRYqXV3w",
