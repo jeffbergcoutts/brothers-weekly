@@ -3,6 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const webapi = require('../spotify-clients/webapi.js');
 const accounts = require('../spotify-clients/accounts.js');
+const { transformPlaylistTracksResponse } = require("../spotify-clients/dataTransformers.js")
 const parseurl = require('parseurl');
 const querystring = require('querystring');
 
@@ -44,10 +45,12 @@ app.get("/api", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
+  console.log("called /login")
   res.redirect(302, `https://accounts.spotify.com/authorize?client_id=${clientID}&response_type=code&redirect_uri=${baseURL}callback&scope=user-read-recently-played user-library-read`);
 });
 
 app.get("/callback", (req, res) => { //callback from oauth flow
+  console.log("called /callback")
   // get code from url
   var query = parseurl(req).query;
   var queryValues = querystring.parse(query);
@@ -55,45 +58,47 @@ app.get("/callback", (req, res) => { //callback from oauth flow
 
   // get Token using code
   accounts.requestToken(code)
-    .then( res => {
+    .then( response => JSON.parse(response))
+    .then( response => {
       // store Token in cookie for later use
-      req.session.accessToken = res.access_token;
-      req.session.refreshToken = res.refresh_token;
+      req.session.accessToken = response.access_token;
+      req.session.refreshToken = response.refresh_token;
 
       var date = new Date();
       var expiresIn = (res.expires_in * 1000) + date.getTime();
       req.session.expiryDate = expiresIn;
-  }).then(() => {
-    res.redirect(302, baseURL)
+    }).then(() => {
+      res.redirect(302, baseURL)
   });
 });
 
 app.get("/sharedweekly", (req, res) => {
-  console.log("called /sharedweekly!")
-  accounts.getTokenFromRefreshToken(createPlaylistRefreshToken).then( response => {
-    webapi.getLastWeeksTracks(response.access_token, realPlaylistId)
+  // Get Playlist Tracks from Spotify Web API
+  console.log("called /sharedweekly")
+  accounts.getTokenFromRefreshToken(createPlaylistRefreshToken)
+    .then( response => JSON.parse(response))
     .then( response => {
-      const data = JSON.parse(response).items
-      res.json({
-        data
-      });
+      webapi.getPlaylistTracks(response.access_token, realPlaylistId)
+        .then( response => {
+          const data = transformPlaylistTracksResponse(response)
+          res.send(data); // returns JSON to front end
+        })
+        .catch( err => {
+          res.end(err)
+        })
     })
     .catch( err => {
       res.end(err)
     })
-  })
 })
 
 app.get("/recentlyplayed", (req, res) => {
-  console.log("called /recentlyplayed!")
-  
-  // Get Recently Played from Spotify API
-  webapi.getRecentlyPlayed(req.session.accessToken)
+  // Get User's Recently Played Tracks from Spotify Web API
+  console.log("called /recentlyplayed")
+  webapi.getUsersRecentlyPlayedTracks(req.session.accessToken)
     .then( response => {
-      const data = JSON.parse(response).items
-      res.json({
-        data
-      });
+      const data = transformPlaylistTracksResponse(response)
+      res.send(data); // returns JSON to front end
     })
     .catch( err => {
       res.end(err)

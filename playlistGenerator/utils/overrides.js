@@ -30,4 +30,4 @@ const overrides = {
     }
 }
 
-module.exports ={overrides}
+module.exports = {overrides}
