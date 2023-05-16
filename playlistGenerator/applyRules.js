@@ -1,8 +1,32 @@
-const { print } = require("./utils/helpers.js")
+const { print, getTrackIdsFromPlaylist } = require("./utils/helpers.js")
 const { transformUsersTopTracksResponse } = require("../spotify-clients/dataTransformers.js")
 const { overrides } = require('./utils/overrides.js')
+const webapi = require('../spotify-clients/webapi.js')
 
-function filterUsersTopTracks(topTracksForUser, lastWeeksTracks, currentWeekTracks) {
+async function getPlaylistDenylistTracks(userRefreshToken, userAccessToken) {
+  const playlistsDenyList = overrides.denylist.playlists
+  let playlistsOnDenylist = []
+  // Check if the user has any playlists on the denylist
+  for (x = 0; x < playlistsDenyList.length; x++) {
+    if (playlistsDenyList[x].refreshToken === userRefreshToken) {
+      playlistsOnDenylist = playlistsDenyList[x].playlistIDs
+    } else {
+    }
+  }
+
+  let playlistDenylistTracks = []
+  // Then get all trackID's from those playlists and add them to an array and return it
+  if (playlistsOnDenylist.length != 0) {
+    for (const playlistID of playlistsOnDenylist) {
+      const playlistTracks = await webapi.getPlaylistTracks(userAccessToken, playlistID)
+      const trackIDsOnPlaylist = getTrackIdsFromPlaylist(playlistTracks)
+      playlistDenylistTracks = playlistDenylistTracks.concat(trackIDsOnPlaylist)
+    }
+  }
+  return playlistDenylistTracks
+}
+
+function filterUsersTopTracks(topTracksForUser, lastWeeksTracks, currentWeekTracks, playlistDenylistTracks) {
   // Takes a JSON object of a user Top Tracks as returned from the Spotify Web Api
   // will return a maximum of 10 track Id's in an array
   // general rules: 
@@ -19,7 +43,7 @@ function filterUsersTopTracks(topTracksForUser, lastWeeksTracks, currentWeekTrac
   let repeatTracks = 0
   let previousAlbums = []
   let reportTracks = []
-  
+
   const tracks = transformUsersTopTracksResponse(topTracksForUser)
 
   for (x = 0; x < tracks.length; x++) {
@@ -47,6 +71,11 @@ function filterUsersTopTracks(topTracksForUser, lastWeeksTracks, currentWeekTrac
     if (albumDenylist.includes(albumId)) {
       addTrack = false
       reportTag = "skipped: album on denylist"
+    }
+    // don't add if playlist is on denylist
+    if (playlistDenylistTracks.includes(trackId)) {
+      addTrack = false
+      reportTag = "skipped: track on a playlist on the users denylist"
     }
 
     // check if track was on last weeks playlist
@@ -96,4 +125,4 @@ function filterUsersTopTracks(topTracksForUser, lastWeeksTracks, currentWeekTrac
   return uniqueTracks
 }
 
-module.exports = { filterUsersTopTracks }
+module.exports = { filterUsersTopTracks, getPlaylistDenylistTracks }

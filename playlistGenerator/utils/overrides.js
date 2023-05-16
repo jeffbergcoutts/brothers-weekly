@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const overrides = {
     denylist: {
         tracks: [],
@@ -26,6 +28,15 @@ const overrides = {
             "2A3DK9TwLnlkjI5OMITTjQ",
             "6ufVQnyyFBLj8YzcKG3OYl",
             "6goK4KMSdP4A8lw8jk4ADk"
+        ],
+        playlists: [
+            {
+                refreshToken: process.env.REFRESHTOKEN2,
+                playlistIDs: [
+                    "1hovmD1aDKIVw7c74e0Biu",
+                    "2bQvpMjqN1PedUrCBLW0pY"
+                ]
+            }
         ]
     }
 }

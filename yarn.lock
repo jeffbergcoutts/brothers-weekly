@@ -922,9 +922,9 @@ camelcase@^6.0.0:
   integrity sha1-kkr4gcnVJaydh/QNlk5c6pgqGAk=
 
 caniuse-lite@^1.0.30001265:
-  version "1.0.30001267"
-  resolved "https://artifactory.spotify.net/artifactory/api/npm/virtual-npm/caniuse-lite/-/caniuse-lite-1.0.30001267.tgz#b1cf2937175afc0570e4615fc2d2f9069fa0ed30"
-  integrity sha1-sc8pNxda/AVw5GFfwtL5Bp+g7TA=
+  version "1.0.30001487"
+  resolved "https://artifactory.spotify.net/artifactory/api/npm/virtual-npm/caniuse-lite/-/caniuse-lite-1.0.30001487.tgz"
+  integrity sha512-83564Z3yWGqXsh2vaH/mhXfEM0wX+NlBCm1jYHOb97TrTWJEmPTccZgeLTPBUUb0PNVo+oomb7wkimZBIERClA==
 
 capture-exit@^2.0.0:
   version "2.0.0"

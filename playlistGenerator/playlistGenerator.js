@@ -3,7 +3,7 @@ const webapi = require('../spotify-clients/webapi.js')
 const accounts = require('../spotify-clients/accounts.js')
 
 const { print, getTrackIdsFromPlaylist, createTrackListForPlaylistCreation, getOffsetForPlaylistUserOrder } = require("./utils/helpers.js")
-const { filterUsersTopTracks } = require("./applyRules.js")
+const { filterUsersTopTracks, getPlaylistDenylistTracks } = require("./applyRules.js")
 
 async function getAllTracksAndCreatePlaylist(mode, weekNumber) {
   const userRefreshTokens = [
@@ -50,16 +50,20 @@ async function getAllTracksAndCreatePlaylist(mode, weekNumber) {
 
   // get top tracks from each user, filter based on rules, and add to new tracks list
   var currentWeekTracks = []
-  for (i = 0; i < noOfUsers; i++) {
-    var pointer = ((i + offset) % noOfUsers) // based order on offset, determined by week number
+  for (j = 0; j < noOfUsers; j++) {
+    var pointer = ((j + offset) % noOfUsers) // based order on offset, determined by week number
     print(`pointer: ${pointer}`)
 
-    var userAuth = await accounts.getTokenFromRefreshToken(userRefreshTokens[pointer])
+    var userRefreshToken = userRefreshTokens[pointer]
+    var userAuth = await accounts.getTokenFromRefreshToken(userRefreshToken)
     const userAccessToken = JSON.parse(userAuth).access_token
+    const topTracksForUser = await webapi.getUsersTopTracks(userAccessToken)
 
-    var topTracksForUser = await webapi.getUsersTopTracks(userAccessToken)
-    var eligibleTracks = filterUsersTopTracks(topTracksForUser, lastWeeksTracks, currentWeekTracks)
+    // get tracks list on playlist denylist for each user to pass to the filter function TODO - put this all in filter?
+    const playlistDenylistTracks = await getPlaylistDenylistTracks(userRefreshToken, userAccessToken)
 
+    //filter tracks based on rules and denylist
+    eligibleTracks = filterUsersTopTracks(topTracksForUser, lastWeeksTracks, currentWeekTracks, playlistDenylistTracks)
     currentWeekTracks = currentWeekTracks.concat(eligibleTracks)
   }
   console.log(`current weeks tracks: ${currentWeekTracks}`)
