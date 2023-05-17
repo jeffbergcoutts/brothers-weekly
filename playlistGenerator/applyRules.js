@@ -38,6 +38,7 @@ function filterUsersTopTracks(topTracksForUser, lastWeeksTracks, currentWeekTrac
 
   const artistDenylist = overrides.denylist.artists
   const albumDenylist = overrides.denylist.albums
+  const tracksDenylist = overrides.denylist.tracks
 
   let uniqueTracks = []
   let repeatTracks = 0
@@ -72,6 +73,13 @@ function filterUsersTopTracks(topTracksForUser, lastWeeksTracks, currentWeekTrac
       addTrack = false
       reportTag = "skipped: album on denylist"
     }
+
+     // don't add if track is on denylist
+     if (tracksDenylist.includes(trackId)) {
+      addTrack = false
+      reportTag = "skipped: track on denylist"
+    }
+
     // don't add if playlist is on denylist
     if (playlistDenylistTracks.includes(trackId)) {
       addTrack = false

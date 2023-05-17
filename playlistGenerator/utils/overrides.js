@@ -2,7 +2,11 @@ require('dotenv').config()
 
 const overrides = {
     denylist: {
-        tracks: [],
+        tracks: [
+            "7zyvB7mcZx4dPVUJSHmFZ7",
+            "16oPahnRcrfG6xDqOZnlUF",
+            "1GLfy1ihm081aOruK0uZU0"
+        ],
         albums: [
             "6AVhZFoVQNjVKTb2lVNokw",
             "2T9jkpdjKDjzoOqPfaCAMu",
