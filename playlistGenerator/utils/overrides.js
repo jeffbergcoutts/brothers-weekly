@@ -5,7 +5,12 @@ const overrides = {
         tracks: [
             "7zyvB7mcZx4dPVUJSHmFZ7",
             "16oPahnRcrfG6xDqOZnlUF",
-            "1GLfy1ihm081aOruK0uZU0"
+            "1GLfy1ihm081aOruK0uZU0",
+            "5LyfiK6iXEIBNEtcaGKohl",
+            "0xeOilcag5yUvkShSTybHB",
+            "64pQtAaD9WbSMbdj2gkU6u",
+            "1Q6h73UKeNO0AtA1TRS3tL",
+            "2WGaQW21lFtONOqA5WeQZz"
         ],
         albums: [
             "6AVhZFoVQNjVKTb2lVNokw",
